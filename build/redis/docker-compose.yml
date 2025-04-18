@@ -1,0 +1,21 @@
+services:
+  redis:
+    build:
+      context: ../..
+      dockerfile: build/redis/Dockerfile
+    container_name: redis
+    volumes:
+      - redis-data:/data
+    environment:
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+
+volumes:
+  redis-data:

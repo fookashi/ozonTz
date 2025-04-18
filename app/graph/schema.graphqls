@@ -1,0 +1,44 @@
+scalar Time
+
+type User {
+  id: ID!
+  username: String!
+}
+
+type Post {
+  id: ID!
+  user: User!
+  title: String!
+  content: String!
+  isCommentable: Boolean!
+  comments(limit: Int!, offset: Int!): [Comment!]!
+  createdAt: Time!
+}
+
+type Comment {
+  id: ID!
+  user: User!
+  replies(limit: Int!, offset: Int!): [Comment!]!
+  content: String!
+  createdAt: Time!
+}
+
+enum SortBy {
+  NEWEST
+  OLDEST
+  TOP
+}
+
+type Query {
+  user(id: ID!): User!
+  post(id: ID!): Post!
+  replies(commentId: ID!, limit: Int!, offset: Int!): [Comment!]!
+  posts(limit: Int!, offset: Int!, sortBy: SortBy): [Post!]!
+}
+
+type Mutation {
+  createUser(username: String!): User!
+  createPost(userId: ID!, title: String!, content: String!, isCommentable: Boolean!): Post!
+  createComment(userId: ID!, postId: ID!, parentId: ID, content: String!): Comment!
+  togglePostComments(postId: ID!, editor: ID!, enabled: Boolean!): ID!
+}

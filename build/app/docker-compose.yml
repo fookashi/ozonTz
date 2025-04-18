@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: build/app/Dockerfile
+    container_name: ozon-app
+    environment:
+      - DB_TYPE=inmemory
+      - LOG_LVL=${LOG_LVL}
+      - PORT=${APP_PORT}
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

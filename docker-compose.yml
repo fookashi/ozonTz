@@ -1,0 +1,11 @@
+services:
+  app:
+    extends:
+      file: build/app/docker-compose.yml
+      service: app
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
