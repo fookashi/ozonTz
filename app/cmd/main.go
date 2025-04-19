@@ -5,6 +5,7 @@ import (
 	"app/internal/config"
 	"app/internal/repository"
 	"app/internal/repository/inmemory"
+	"app/internal/repository/postgres"
 	"app/internal/service"
 	"log"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -24,7 +26,10 @@ func main() {
 
 	switch cfg.DB.(type) {
 	case config.InMemoryConfig:
-		repoHolder = inmemory.NewInMemoryRepoHolder(50)
+		repoHolder = inmemory.NewRepoHolder(50)
+	case config.PostgresConfig:
+		db, _ := sqlx.Connect("postgres", cfg.DB.DSN())
+		repoHolder = postgres.NewRepoHolder(db)
 	default:
 		log.Fatal("Unsupported database type")
 	}

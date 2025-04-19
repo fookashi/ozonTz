@@ -6,9 +6,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type UserRepo struct {
@@ -21,15 +24,16 @@ func NewUserRepo(db *sqlx.DB) *UserRepo {
 
 func (r *UserRepo) Create(ctx context.Context, user entity.User) error {
 	query := `INSERT INTO users (id, username, roles) VALUES ($1, $2, $3)`
-	_, err := r.db.ExecContext(ctx, query, user.Id, user.Username, user.Roles)
+	_, err := r.db.ExecContext(ctx, query, user.Id, user.Username, pq.Array(user.Roles))
 	return err
 }
 
 func (r *UserRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.User, error) {
 	var user entity.User
 	query := `SELECT id, username, roles FROM users WHERE id = $1`
-	err := r.db.GetContext(ctx, &user, query, id)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.Id, &user.Username, pq.Array(&user.Roles))
 	if errors.Is(err, sql.ErrNoRows) {
+		log.Printf("user not found: %v", user)
 		return entity.User{}, repository.ErrNotFound
 	}
 	return user, err
@@ -40,17 +44,14 @@ func (r *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) ([]entity.
 		return []entity.User{}, nil
 	}
 
-	query, args, err := sqlx.In(`SELECT id, username, roles FROM users WHERE id IN (?)`, ids)
+	query := `SELECT id, username, roles FROM users WHERE id = ANY($1)`
+
+	var users []entity.User
+	err := r.db.SelectContext(ctx, &users, query, pq.Array(ids))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get users by ids: %w", err)
 	}
 
-	query = r.db.Rebind(query)
-	var users []entity.User
-	err = r.db.SelectContext(ctx, &users, query, args...)
-	if err != nil {
-		return nil, err
-	}
 	if len(users) < len(ids) {
 		return users, repository.ErrNotFound
 	}

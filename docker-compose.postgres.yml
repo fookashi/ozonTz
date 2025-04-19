@@ -12,8 +12,15 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_SSLMODE=${POSTGRES_SSLMODE}
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - app_network
+
+  migrate:
+    extends:
+      file: build/postgres/docker-compose.yml
+      service: migrate
     networks:
       - app_network
 

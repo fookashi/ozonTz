@@ -1,0 +1,22 @@
+package service
+
+import (
+	"app/graph/model"
+	"context"
+
+	"github.com/google/uuid"
+)
+
+//go:generate go run github.com/golang/mock/mockgen -source=service.go -destination=mocks/service.go
+
+type IUserService interface {
+	GetUser(ctx context.Context, id uuid.UUID) (*model.User, error)
+	CreateUser(ctx context.Context, username string) (*model.User, error)
+}
+
+type IPostService interface {
+	GetPostById(ctx context.Context, id uuid.UUID) (*model.Post, error)
+	GetPosts(ctx context.Context, limit, offset int, sortBy *model.SortBy) ([]*model.Post, error)
+	CreatePost(ctx context.Context, userId uuid.UUID, title string, content string, isCommentable bool) (*model.Post, error)
+	TogglePostComments(ctx context.Context, postId uuid.UUID, editorId uuid.UUID, enabled bool) error
+}

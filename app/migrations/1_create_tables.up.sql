@@ -1,0 +1,29 @@
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY,
+    username TEXT NOT NULL,
+    roles TEXT[] NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    is_commentable BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id),
+    post_id UUID NOT NULL REFERENCES posts(id),
+    parent_id UUID REFERENCES comments(id),
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments USING hash(post_id);
+CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments USING hash(parent_id);
+
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts USING hash(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_create_at ON posts USING btree(user_id);

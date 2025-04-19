@@ -10,18 +10,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type inMemoryPostRepo struct {
+type PostRepo struct {
 	posts map[uuid.UUID]entity.Post
 	mu    sync.RWMutex
 }
 
-func NewInMemoryPostRepo(initSize int) *inMemoryPostRepo {
-	return &inMemoryPostRepo{
+func NewPostRepo(initSize int) *PostRepo {
+	return &PostRepo{
 		posts: make(map[uuid.UUID]entity.Post, initSize),
 	}
 }
 
-func (r *inMemoryPostRepo) Create(ctx context.Context, post entity.Post) error {
+func (r *PostRepo) Create(ctx context.Context, post entity.Post) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -29,7 +29,7 @@ func (r *inMemoryPostRepo) Create(ctx context.Context, post entity.Post) error {
 	return nil
 }
 
-func (r *inMemoryPostRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.Post, error) {
+func (r *PostRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.Post, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -40,7 +40,7 @@ func (r *inMemoryPostRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity
 	return post, nil
 }
 
-func (r *inMemoryPostRepo) GetMany(ctx context.Context, limit, offset int, sortBy repository.SortBy) ([]entity.Post, error) {
+func (r *PostRepo) GetMany(ctx context.Context, limit, offset int, sortBy repository.SortBy) ([]entity.Post, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -67,10 +67,6 @@ func (r *inMemoryPostRepo) GetMany(ctx context.Context, limit, offset int, sortB
 		sort.Slice(allPosts, func(i, j int) bool {
 			return allPosts[i].CreatedAt.Before(allPosts[j].CreatedAt)
 		})
-	case repository.SortByTop:
-		sort.Slice(allPosts, func(i, j int) bool {
-			return len(allPosts[i].Content) > len(allPosts[j].Content)
-		})
 	default:
 		sort.Slice(allPosts, func(i, j int) bool {
 			return allPosts[i].CreatedAt.After(allPosts[j].CreatedAt)
@@ -89,7 +85,7 @@ func (r *inMemoryPostRepo) GetMany(ctx context.Context, limit, offset int, sortB
 	return allPosts[offset:end], nil
 }
 
-func (r *inMemoryPostRepo) Update(ctx context.Context, post entity.Post) error {
+func (r *PostRepo) Update(ctx context.Context, post entity.Post) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

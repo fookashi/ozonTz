@@ -4,12 +4,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var ()
-
 type User struct {
-	Id       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	Roles    []string  `json:"roles"`
+	Id       uuid.UUID `db:"id"`
+	Username string    `db:"username"`
+	Roles    []string  `db:"roles"`
 }
 
 func NewUser(username string) (*User, error) {

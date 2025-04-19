@@ -5,14 +5,10 @@ import (
 	"app/internal/entity"
 	"app/internal/repository"
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 )
-
-type IUserService interface {
-	GetUser(ctx context.Context, id uuid.UUID) (*model.User, error)
-	CreateUser(ctx context.Context, username string) (*model.User, error)
-}
 
 type UserService struct {
 	RepoHolder *repository.RepoHolder
@@ -21,6 +17,7 @@ type UserService struct {
 func (s *UserService) GetUser(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	user, err := s.RepoHolder.UserRepo.GetOneById(ctx, id)
 	if err != nil {
+		log.Fatal(err)
 		return nil, ErrUserNotFound
 	}
 	return &model.User{
@@ -41,6 +38,7 @@ func (s *UserService) CreateUser(ctx context.Context, username string) (*model.U
 
 	err = s.RepoHolder.UserRepo.Create(ctx, *newUser)
 	if err != nil {
+		log.Fatal(err)
 		return nil, ErrDueUserCreation
 	}
 

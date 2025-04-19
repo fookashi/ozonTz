@@ -9,20 +9,20 @@ import (
 	"github.com/google/uuid"
 )
 
-type inMemoryUserRepo struct {
+type UserRepo struct {
 	users         map[uuid.UUID]entity.User
 	usernameIndex map[string]uuid.UUID
 	lock          sync.RWMutex
 }
 
-func NewInMemoryUserRepo(initSize int) *inMemoryUserRepo {
-	return &inMemoryUserRepo{
+func NewInMemoryUserRepo(initSize int) *UserRepo {
+	return &UserRepo{
 		users:         make(map[uuid.UUID]entity.User, initSize),
 		usernameIndex: make(map[string]uuid.UUID, initSize),
 	}
 }
 
-func (repo *inMemoryUserRepo) Create(ctx context.Context, user entity.User) error {
+func (repo *UserRepo) Create(ctx context.Context, user entity.User) error {
 	if err := ctx.Err(); err != nil {
 		return repository.ErrContextCanceled
 	}
@@ -32,7 +32,7 @@ func (repo *inMemoryUserRepo) Create(ctx context.Context, user entity.User) erro
 	repo.usernameIndex[user.Username] = user.Id
 	return nil
 }
-func (repo *inMemoryUserRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.User, error) {
+func (repo *UserRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.User, error) {
 	if err := ctx.Err(); err != nil {
 		return entity.User{}, repository.ErrContextCanceled
 	}
@@ -45,7 +45,7 @@ func (repo *inMemoryUserRepo) GetOneById(ctx context.Context, id uuid.UUID) (ent
 	return user, nil
 }
 
-func (repo *inMemoryUserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) ([]entity.User, error) {
+func (repo *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) ([]entity.User, error) {
 	if err := ctx.Err(); err != nil {
 		return []entity.User{}, repository.ErrContextCanceled
 	}
@@ -72,7 +72,7 @@ func (repo *inMemoryUserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID)
 	return result, nil
 }
 
-func (repo *inMemoryUserRepo) GetOneByUsername(ctx context.Context, username string) (entity.User, error) {
+func (repo *UserRepo) GetOneByUsername(ctx context.Context, username string) (entity.User, error) {
 	if err := ctx.Err(); err != nil {
 		return entity.User{}, repository.ErrContextCanceled
 	}
@@ -85,7 +85,7 @@ func (repo *inMemoryUserRepo) GetOneByUsername(ctx context.Context, username str
 	}
 	return user, nil
 }
-func (repo *inMemoryUserRepo) UsernameExists(ctx context.Context, username string) (bool, error) {
+func (repo *UserRepo) UsernameExists(ctx context.Context, username string) (bool, error) {
 	if err := ctx.Err(); err != nil {
 		return false, repository.ErrContextCanceled
 	}

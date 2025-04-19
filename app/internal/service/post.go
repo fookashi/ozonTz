@@ -10,13 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type IPostService interface {
-	GetPostById(ctx context.Context, id uuid.UUID) (*model.Post, error)
-	GetPosts(ctx context.Context, limit, offset int, sortBy *model.SortBy) ([]*model.Post, error)
-	CreatePost(ctx context.Context, userId uuid.UUID, title string, content string, isCommentable bool) (*model.Post, error)
-	TogglePostComments(ctx context.Context, postId uuid.UUID, editorId uuid.UUID, enabled bool) error
-}
-
 type PostService struct {
 	RepoHolder *repository.RepoHolder
 }

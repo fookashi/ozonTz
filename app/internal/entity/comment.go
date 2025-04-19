@@ -7,12 +7,12 @@ import (
 )
 
 type Comment struct {
-	Id        uuid.UUID  `json:"id"`
-	UserId    uuid.UUID  `json:"userId"`
-	PostId    uuid.UUID  `json:"postId"`
-	ParentId  *uuid.UUID `json:"parentId"`
-	Content   string     `json:"content"`
-	CreatedAt time.Time  `json:"createdAt"`
+	Id        uuid.UUID  `db:"id"`
+	UserId    uuid.UUID  `db:"user_id"`
+	PostId    uuid.UUID  `db:"post_id"`
+	ParentId  *uuid.UUID `db:"parent_id"`
+	Content   string     `db:"content"`
+	CreatedAt time.Time  `db:"created_at"`
 }
 
 func NewComment(userId, postId uuid.UUID, parentId *uuid.UUID, content string) (*Comment, error) {

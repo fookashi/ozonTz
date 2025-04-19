@@ -7,12 +7,12 @@ import (
 )
 
 type Post struct {
-	Id            uuid.UUID `json:"id"`
-	UserId        uuid.UUID `json:"userId"`
-	Title         string    `json:"title"`
-	Content       string    `json:"content"`
-	IsCommentable bool      `json:"isCommentable"`
-	CreatedAt     time.Time `json:"createdAt"`
+	Id            uuid.UUID `db:"id"`
+	UserId        uuid.UUID `db:"user_id"`
+	Title         string    `db:"title"`
+	Content       string    `db:"content"`
+	IsCommentable bool      `db:"is_commentable"`
+	CreatedAt     time.Time `db:"created_at"`
 }
 
 func NewPost(userId uuid.UUID, title string, content string, isCommentable bool) (*Post, error) {

@@ -13,7 +13,7 @@ import (
 
 func TestInMemoryPostRepo(t *testing.T) {
 	// Setup
-	repo := NewInMemoryPostRepo(10)
+	repo := NewPostRepo(10)
 	ctx := context.Background()
 	canceledCtx, cancel := context.WithCancel(ctx)
 	cancel()
@@ -93,7 +93,6 @@ func TestInMemoryPostRepo(t *testing.T) {
 	})
 
 	t.Run("GetMany", func(t *testing.T) {
-		// Add more posts for testing
 		_ = repo.Create(ctx, post2)
 		_ = repo.Create(ctx, post3)
 
@@ -119,9 +118,9 @@ func TestInMemoryPostRepo(t *testing.T) {
 			posts, err := repo.GetMany(ctx, 10, 0, repository.SortByTop)
 			assert.NoError(t, err)
 			assert.Len(t, posts, 3)
-			assert.Equal(t, post3.Id, posts[0].Id) // Longest content
+			assert.Equal(t, post3.Id, posts[0].Id)
 			assert.Equal(t, post2.Id, posts[1].Id)
-			assert.Equal(t, post1.Id, posts[2].Id) // Shortest content
+			assert.Equal(t, post1.Id, posts[2].Id)
 		})
 
 		t.Run("pagination", func(t *testing.T) {

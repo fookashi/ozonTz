@@ -10,6 +10,9 @@ else
 	@docker-compose -f docker-compose.yml --env-file config/.env up --build
 endif
 
+stop:
+	@docker-compose -f docker-compose.yml --env-file config/.env down
+
 build:
 	@docker-compose -f docker-compose.yml --env-file config/.env build
 

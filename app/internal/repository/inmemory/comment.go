@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type inMemoryCommentRepo struct {
+type CommentRepo struct {
 	comments     map[uuid.UUID]entity.Comment
 	postIndex    map[uuid.UUID][]uuid.UUID
 	repliesIndex map[uuid.UUID][]uuid.UUID
@@ -17,15 +17,15 @@ type inMemoryCommentRepo struct {
 	mu sync.RWMutex
 }
 
-func NewInMemoryCommentRepo(initSize int) *inMemoryCommentRepo {
-	return &inMemoryCommentRepo{
+func NewCommentRepo(initSize int) *CommentRepo {
+	return &CommentRepo{
 		comments:     make(map[uuid.UUID]entity.Comment, initSize),
 		postIndex:    make(map[uuid.UUID][]uuid.UUID, initSize),
 		repliesIndex: make(map[uuid.UUID][]uuid.UUID, initSize),
 	}
 }
 
-func (r *inMemoryCommentRepo) Create(ctx context.Context, comment entity.Comment) error {
+func (r *CommentRepo) Create(ctx context.Context, comment entity.Comment) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -40,7 +40,7 @@ func (r *inMemoryCommentRepo) Create(ctx context.Context, comment entity.Comment
 	return nil
 }
 
-func (r *inMemoryCommentRepo) GetOneByID(ctx context.Context, commentID uuid.UUID) (*entity.Comment, error) {
+func (r *CommentRepo) GetOneByID(ctx context.Context, commentID uuid.UUID) (*entity.Comment, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -52,7 +52,7 @@ func (r *inMemoryCommentRepo) GetOneByID(ctx context.Context, commentID uuid.UUI
 	return &comment, nil
 }
 
-func (r *inMemoryCommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]*entity.Comment, error) {
+func (r *CommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]*entity.Comment, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -76,7 +76,7 @@ func (r *inMemoryCommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, l
 	return result, nil
 }
 
-func (r *inMemoryCommentRepo) GetReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]*entity.Comment, error) {
+func (r *CommentRepo) GetReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]*entity.Comment, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
