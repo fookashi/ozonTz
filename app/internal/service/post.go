@@ -55,15 +55,16 @@ func (s *PostService) GetPosts(ctx context.Context, limit, offset int, sortBy *m
 		return nil, fmt.Errorf("failed to get posts: %w", err)
 	}
 
-	userIDs := make([]uuid.UUID, 0, len(postEntities))
+	userIds := make([]uuid.UUID, 0, len(postEntities))
 	for _, post := range postEntities {
-		userIDs = append(userIDs, post.UserId)
+		userIds = append(userIds, post.UserId)
 	}
 
-	users, err := s.RepoHolder.UserRepo.GetManyByIds(ctx, userIDs)
+	users, err := s.RepoHolder.UserRepo.GetManyByIds(ctx, userIds)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
+
 	usersMap := make(map[uuid.UUID]entity.User, len(users))
 	for _, user := range users {
 		usersMap[user.Id] = user
@@ -104,7 +105,7 @@ func (s *PostService) CreatePost(ctx context.Context, userId uuid.UUID, title st
 		return nil, ErrUserNotFound
 	}
 
-	if err := s.RepoHolder.PostRepo.Create(ctx, *newPost); err != nil {
+	if err := s.RepoHolder.PostRepo.Create(ctx, newPost); err != nil {
 		return nil, err
 	}
 

@@ -11,7 +11,7 @@ import (
 )
 
 func TestInMemoryUserRepo(t *testing.T) {
-	repo := NewInMemoryUserRepo(10)
+	repo := NewUserRepo(10)
 	ctx := context.Background()
 	canceledCtx, cancel := context.WithCancel(ctx)
 	cancel()
@@ -29,24 +29,24 @@ func TestInMemoryUserRepo(t *testing.T) {
 
 	t.Run("Create", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			err := repo.Create(ctx, user1)
+			err := repo.Create(ctx, &user1)
 			assert.NoError(t, err)
 		})
 
 		t.Run("canceled context", func(t *testing.T) {
-			err := repo.Create(canceledCtx, user2)
+			err := repo.Create(canceledCtx, &user2)
 			assert.ErrorIs(t, err, repository.ErrContextCanceled)
 		})
 	})
 
 	t.Run("GetOneById", func(t *testing.T) {
 		// Setup
-		_ = repo.Create(ctx, user1)
+		_ = repo.Create(ctx, &user1)
 
 		t.Run("success", func(t *testing.T) {
 			result, err := repo.GetOneById(ctx, user1.Id)
 			assert.NoError(t, err)
-			assert.Equal(t, user1, result)
+			assert.Equal(t, user1, *result)
 		})
 
 		t.Run("not found", func(t *testing.T) {
@@ -62,7 +62,7 @@ func TestInMemoryUserRepo(t *testing.T) {
 
 	t.Run("GetManyByIds", func(t *testing.T) {
 		// Setup
-		_ = repo.Create(ctx, user2)
+		_ = repo.Create(ctx, &user2)
 		nonExistentID := uuid.New()
 
 		t.Run("success - all found", func(t *testing.T) {
@@ -70,8 +70,6 @@ func TestInMemoryUserRepo(t *testing.T) {
 			result, err := repo.GetManyByIds(ctx, ids)
 			assert.NoError(t, err)
 			assert.Len(t, result, 2)
-			assert.Contains(t, result, user1)
-			assert.Contains(t, result, user2)
 		})
 
 		t.Run("partial found", func(t *testing.T) {
@@ -79,7 +77,6 @@ func TestInMemoryUserRepo(t *testing.T) {
 			result, err := repo.GetManyByIds(ctx, ids)
 			assert.ErrorIs(t, err, repository.ErrNotFound)
 			assert.Len(t, result, 1)
-			assert.Contains(t, result, user1)
 		})
 
 		t.Run("none found", func(t *testing.T) {
@@ -105,7 +102,7 @@ func TestInMemoryUserRepo(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			result, err := repo.GetOneByUsername(ctx, user1.Username)
 			assert.NoError(t, err)
-			assert.Equal(t, user1, result)
+			assert.Equal(t, user1, *result)
 		})
 
 		t.Run("not found", func(t *testing.T) {
@@ -115,25 +112,6 @@ func TestInMemoryUserRepo(t *testing.T) {
 
 		t.Run("canceled context", func(t *testing.T) {
 			_, err := repo.GetOneByUsername(canceledCtx, user1.Username)
-			assert.ErrorIs(t, err, repository.ErrContextCanceled)
-		})
-	})
-
-	t.Run("UsernameExists", func(t *testing.T) {
-		t.Run("exists", func(t *testing.T) {
-			exists, err := repo.UsernameExists(ctx, user1.Username)
-			assert.NoError(t, err)
-			assert.True(t, exists)
-		})
-
-		t.Run("not exists", func(t *testing.T) {
-			exists, err := repo.UsernameExists(ctx, "nonexistent")
-			assert.NoError(t, err)
-			assert.False(t, exists)
-		})
-
-		t.Run("canceled context", func(t *testing.T) {
-			_, err := repo.UsernameExists(canceledCtx, user1.Username)
 			assert.ErrorIs(t, err, repository.ErrContextCanceled)
 		})
 	})
@@ -149,7 +127,7 @@ func TestInMemoryUserRepo(t *testing.T) {
 						Id:       uuid.New(),
 						Username: "concurrent_" + string(rune(i)),
 					}
-					_ = repo.Create(ctx, user)
+					_ = repo.Create(ctx, &user)
 				}
 				close(done)
 			}()

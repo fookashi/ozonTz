@@ -15,45 +15,46 @@ type UserRepo struct {
 	lock          sync.RWMutex
 }
 
-func NewInMemoryUserRepo(initSize int) *UserRepo {
+func NewUserRepo(initSize int) *UserRepo {
 	return &UserRepo{
 		users:         make(map[uuid.UUID]entity.User, initSize),
 		usernameIndex: make(map[string]uuid.UUID, initSize),
 	}
 }
 
-func (repo *UserRepo) Create(ctx context.Context, user entity.User) error {
+func (repo *UserRepo) Create(ctx context.Context, user *entity.User) error {
 	if err := ctx.Err(); err != nil {
 		return repository.ErrContextCanceled
 	}
 	repo.lock.Lock()
 	defer repo.lock.Unlock()
-	repo.users[user.Id] = user
+	repo.users[user.Id] = *user
 	repo.usernameIndex[user.Username] = user.Id
 	return nil
 }
-func (repo *UserRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.User, error) {
+
+func (repo *UserRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	if err := ctx.Err(); err != nil {
-		return entity.User{}, repository.ErrContextCanceled
+		return nil, repository.ErrContextCanceled
 	}
 	repo.lock.RLock()
 	defer repo.lock.RUnlock()
 	user, exists := repo.users[id]
 	if !exists {
-		return entity.User{}, repository.ErrNotFound
+		return nil, repository.ErrNotFound
 	}
-	return user, nil
+	return &user, nil
 }
 
-func (repo *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) ([]entity.User, error) {
+func (repo *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]entity.User, error) {
 	if err := ctx.Err(); err != nil {
-		return []entity.User{}, repository.ErrContextCanceled
+		return map[uuid.UUID]entity.User{}, repository.ErrContextCanceled
 	}
 
 	repo.lock.RLock()
 	defer repo.lock.RUnlock()
 
-	result := make([]entity.User, 0, len(ids))
+	result := make(map[uuid.UUID]entity.User, len(ids))
 	var notFoundIDs []uuid.UUID
 
 	for _, id := range ids {
@@ -62,7 +63,7 @@ func (repo *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) ([]enti
 			notFoundIDs = append(notFoundIDs, id)
 			continue
 		}
-		result = append(result, user)
+		result[user.Id] = user
 	}
 
 	if len(notFoundIDs) > 0 {
@@ -72,18 +73,18 @@ func (repo *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) ([]enti
 	return result, nil
 }
 
-func (repo *UserRepo) GetOneByUsername(ctx context.Context, username string) (entity.User, error) {
+func (repo *UserRepo) GetOneByUsername(ctx context.Context, username string) (*entity.User, error) {
 	if err := ctx.Err(); err != nil {
-		return entity.User{}, repository.ErrContextCanceled
+		return nil, repository.ErrContextCanceled
 	}
 	repo.lock.RLock()
 	defer repo.lock.RUnlock()
 	id := repo.usernameIndex[username]
 	user, exists := repo.users[id]
 	if !exists {
-		return entity.User{}, repository.ErrNotFound
+		return nil, repository.ErrNotFound
 	}
-	return user, nil
+	return &user, nil
 }
 func (repo *UserRepo) UsernameExists(ctx context.Context, username string) (bool, error) {
 	if err := ctx.Err(); err != nil {

@@ -20,3 +20,8 @@ type IPostService interface {
 	CreatePost(ctx context.Context, userId uuid.UUID, title string, content string, isCommentable bool) (*model.Post, error)
 	TogglePostComments(ctx context.Context, postId uuid.UUID, editorId uuid.UUID, enabled bool) error
 }
+
+type ICommentService interface {
+	CreateComment(ctx context.Context, userId uuid.UUID, postId uuid.UUID, parentId *uuid.UUID, content string) (*model.Comment, error)
+	GetByPost(ctx context.Context, postID uuid.UUID, limit, offset int) ([]*model.Comment, error)
+}

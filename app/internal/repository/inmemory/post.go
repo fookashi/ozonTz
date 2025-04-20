@@ -21,34 +21,33 @@ func NewPostRepo(initSize int) *PostRepo {
 	}
 }
 
-func (r *PostRepo) Create(ctx context.Context, post entity.Post) error {
+func (r *PostRepo) Create(ctx context.Context, post *entity.Post) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.posts[post.Id] = post
+	r.posts[post.Id] = *post
 	return nil
 }
 
-func (r *PostRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.Post, error) {
+func (r *PostRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.Post, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	post, exists := r.posts[id]
 	if !exists {
-		return entity.Post{}, repository.ErrNotFound
+		return nil, repository.ErrNotFound
 	}
-	return post, nil
+	return &post, nil
 }
 
 func (r *PostRepo) GetMany(ctx context.Context, limit, offset int, sortBy repository.SortBy) ([]entity.Post, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	allPosts := make([]entity.Post, 0, len(r.posts))
-
 	if limit == 0 {
-		return allPosts, nil
+		return []entity.Post{}, nil
 	}
+	allPosts := make([]entity.Post, 0, len(r.posts))
 
 	if err := ctx.Err(); err != nil {
 		return allPosts, repository.ErrContextCanceled
@@ -85,10 +84,10 @@ func (r *PostRepo) GetMany(ctx context.Context, limit, offset int, sortBy reposi
 	return allPosts[offset:end], nil
 }
 
-func (r *PostRepo) Update(ctx context.Context, post entity.Post) error {
+func (r *PostRepo) Update(ctx context.Context, post *entity.Post) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.posts[post.Id] = post
+	r.posts[post.Id] = *post
 	return nil
 }

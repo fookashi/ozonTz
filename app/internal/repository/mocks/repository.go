@@ -5,8 +5,8 @@
 package mock_repository
 
 import (
-	entity "app/internal/entity"
-	repository "app/internal/repository"
+	"app/internal/entity"
+	"app/internal/repository"
 	context "context"
 	reflect "reflect"
 
@@ -38,24 +38,24 @@ func (m *MockUserRepo) EXPECT() *MockUserRepoMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserRepo) Create(ctx context.Context, user entity.User) error {
+func (m *MockUserRepo) Create(ctx context.Context, user *entity.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an  expected call of Create.
+// Create indicates an expected call of Create.
 func (mr *MockUserRepoMockRecorder) Create(ctx, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserRepo)(nil).Create), ctx, user)
 }
 
 // GetManyByIds mocks base method.
-func (m *MockUserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) ([]entity.User, error) {
+func (m *MockUserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetManyByIds", ctx, ids)
-	ret0, _ := ret[0].([]entity.User)
+	ret0, _ := ret[0].(map[uuid.UUID]entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -67,10 +67,10 @@ func (mr *MockUserRepoMockRecorder) GetManyByIds(ctx, ids interface{}) *gomock.C
 }
 
 // GetOneById mocks base method.
-func (m *MockUserRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.User, error) {
+func (m *MockUserRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOneById", ctx, id)
-	ret0, _ := ret[0].(entity.User)
+	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -82,10 +82,10 @@ func (mr *MockUserRepoMockRecorder) GetOneById(ctx, id interface{}) *gomock.Call
 }
 
 // GetOneByUsername mocks base method.
-func (m *MockUserRepo) GetOneByUsername(ctx context.Context, username string) (entity.User, error) {
+func (m *MockUserRepo) GetOneByUsername(ctx context.Context, username string) (*entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOneByUsername", ctx, username)
-	ret0, _ := ret[0].(entity.User)
+	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -94,21 +94,6 @@ func (m *MockUserRepo) GetOneByUsername(ctx context.Context, username string) (e
 func (mr *MockUserRepoMockRecorder) GetOneByUsername(ctx, username interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOneByUsername", reflect.TypeOf((*MockUserRepo)(nil).GetOneByUsername), ctx, username)
-}
-
-// UsernameExists mocks base method.
-func (m *MockUserRepo) UsernameExists(ctx context.Context, username string) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UsernameExists", ctx, username)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UsernameExists indicates an expected call of UsernameExists.
-func (mr *MockUserRepoMockRecorder) UsernameExists(ctx, username interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsernameExists", reflect.TypeOf((*MockUserRepo)(nil).UsernameExists), ctx, username)
 }
 
 // MockPostRepo is a mock of PostRepo interface.
@@ -135,7 +120,7 @@ func (m *MockPostRepo) EXPECT() *MockPostRepoMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockPostRepo) Create(ctx context.Context, post entity.Post) error {
+func (m *MockPostRepo) Create(ctx context.Context, post *entity.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, post)
 	ret0, _ := ret[0].(error)
@@ -164,10 +149,10 @@ func (mr *MockPostRepoMockRecorder) GetMany(ctx, limit, offset, sortBy interface
 }
 
 // GetOneById mocks base method.
-func (m *MockPostRepo) GetOneById(ctx context.Context, id uuid.UUID) (entity.Post, error) {
+func (m *MockPostRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOneById", ctx, id)
-	ret0, _ := ret[0].(entity.Post)
+	ret0, _ := ret[0].(*entity.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -179,7 +164,7 @@ func (mr *MockPostRepoMockRecorder) GetOneById(ctx, id interface{}) *gomock.Call
 }
 
 // Update mocks base method.
-func (m *MockPostRepo) Update(ctx context.Context, post entity.Post) error {
+func (m *MockPostRepo) Update(ctx context.Context, post *entity.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, post)
 	ret0, _ := ret[0].(error)
@@ -216,7 +201,7 @@ func (m *MockCommentRepo) EXPECT() *MockCommentRepoMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockCommentRepo) Create(ctx context.Context, comment entity.Comment) error {
+func (m *MockCommentRepo) Create(ctx context.Context, comment *entity.Comment) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, comment)
 	ret0, _ := ret[0].(error)
@@ -229,19 +214,19 @@ func (mr *MockCommentRepoMockRecorder) Create(ctx, comment interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCommentRepo)(nil).Create), ctx, comment)
 }
 
-// GetByPost mocks base method.
-func (m *MockCommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]*entity.Comment, error) {
+// GetByPosts mocks base method.
+func (m *MockCommentRepo) GetByPosts(ctx context.Context, postIds []uuid.UUID, limit, offset int) (map[uuid.UUID][]entity.Comment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByPost", ctx, postId, limit, offset)
-	ret0, _ := ret[0].([]*entity.Comment)
+	ret := m.ctrl.Call(m, "GetByPosts", ctx, postIds, limit, offset)
+	ret0, _ := ret[0].(map[uuid.UUID][]entity.Comment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByPost indicates an expected call of GetByPost.
-func (mr *MockCommentRepoMockRecorder) GetByPost(ctx, postId, limit, offset interface{}) *gomock.Call {
+// GetByPosts indicates an expected call of GetByPosts.
+func (mr *MockCommentRepoMockRecorder) GetByPosts(ctx, postIds, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByPost", reflect.TypeOf((*MockCommentRepo)(nil).GetByPost), ctx, postId, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByPosts", reflect.TypeOf((*MockCommentRepo)(nil).GetByPosts), ctx, postIds, limit, offset)
 }
 
 // GetOneByID mocks base method.
@@ -260,10 +245,10 @@ func (mr *MockCommentRepoMockRecorder) GetOneByID(ctx, commentId interface{}) *g
 }
 
 // GetReplies mocks base method.
-func (m *MockCommentRepo) GetReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]*entity.Comment, error) {
+func (m *MockCommentRepo) GetReplies(ctx context.Context, parentId []uuid.UUID, limit, offset int) (map[uuid.UUID][]entity.Comment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetReplies", ctx, parentId, limit, offset)
-	ret0, _ := ret[0].([]*entity.Comment)
+	ret0, _ := ret[0].(map[uuid.UUID][]entity.Comment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

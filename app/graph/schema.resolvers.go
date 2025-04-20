@@ -13,6 +13,11 @@ import (
 	"github.com/google/uuid"
 )
 
+// Replies is the resolver for the replies field.
+func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, limit int32, offset int32) ([]*model.Comment, error) {
+	panic(fmt.Errorf("not implemented: Replies - replies"))
+}
+
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, username string) (*model.User, error) {
 	return r.UserService.CreateUser(ctx, username)
@@ -66,6 +71,21 @@ func (r *mutationResolver) TogglePostComments(ctx context.Context, postID string
 	return postID, r.PostService.TogglePostComments(ctx, parsedPostID, parsedEditorId, enabled)
 }
 
+// Comments is the resolver for the comments field.
+func (r *postResolver) Comments(ctx context.Context, obj *model.Post, limit int32, offset int32) ([]*model.Comment, error) {
+	postID, err := uuid.Parse(obj.ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid post id: %w", err)
+	}
+
+	comments, err := r.CommentService.GetByPost(ctx, postID, int(limit), int(offset))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get comments: %w", err)
+	}
+
+	return comments, nil
+}
+
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	userId, err := uuid.Parse(id)
@@ -96,11 +116,19 @@ func (r *queryResolver) Posts(ctx context.Context, limit int32, offset int32, so
 	return r.PostService.GetPosts(ctx, int(limit), int(offset), sortBy)
 }
 
+// Comment returns CommentResolver implementation.
+func (r *Resolver) Comment() CommentResolver { return &commentResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Post returns PostResolver implementation.
+func (r *Resolver) Post() PostResolver { return &postResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type commentResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
+type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

@@ -5,6 +5,7 @@ import (
 	"app/internal/entity"
 	"app/internal/repository"
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -48,7 +49,7 @@ func (s *CommentService) CreateComment(ctx context.Context, userId uuid.UUID, po
 		return nil, err
 	}
 
-	if err := s.RepoHolder.CommentRepo.Create(ctx, *newComment); err != nil {
+	if err := s.RepoHolder.CommentRepo.Create(ctx, newComment); err != nil {
 		return nil, err
 	}
 
@@ -60,4 +61,46 @@ func (s *CommentService) CreateComment(ctx context.Context, userId uuid.UUID, po
 		},
 		Content: content,
 	}, nil
+}
+
+func (s *CommentService) GetByPost(ctx context.Context, postID uuid.UUID, limit, offset int) ([]*model.Comment, error) {
+	commentEntities, err := s.RepoHolder.CommentRepo.GetByPost(ctx, postID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get comments: %w", err)
+	}
+
+	userIds := make([]uuid.UUID, 0, len(commentEntities))
+	for _, comment := range commentEntities {
+		userIds = append(userIds, comment.UserId)
+	}
+
+	users, err := s.RepoHolder.UserRepo.GetManyByIds(ctx, userIds)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users: %w", err)
+	}
+
+	usersMap := make(map[uuid.UUID]entity.User, len(users))
+	for _, user := range users {
+		usersMap[user.Id] = user
+	}
+
+	comments := make([]*model.Comment, 0, len(commentEntities))
+	for _, commentEntity := range commentEntities {
+		userEntity, exists := usersMap[commentEntity.UserId]
+		if !exists {
+			return nil, fmt.Errorf("user not found for comment %s", commentEntity.Id)
+		}
+
+		comments = append(comments, &model.Comment{
+			ID:        commentEntity.Id.String(),
+			Content:   commentEntity.Content,
+			CreatedAt: commentEntity.CreatedAt,
+			User: &model.User{
+				ID:       userEntity.Id.String(),
+				Username: userEntity.Username,
+			},
+		})
+	}
+
+	return comments, nil
 }

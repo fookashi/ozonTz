@@ -35,8 +35,8 @@ func TestPostService_GetPostById(t *testing.T) {
 		IsCommentable: true,
 	}
 	t.Run("success", func(t *testing.T) {
-		mockUserRepo.EXPECT().GetOneById(gomock.Any(), userId).Return(expectedUser, nil)
-		mockPostRepo.EXPECT().GetOneById(gomock.Any(), postId).Return(expectedPost, nil)
+		mockUserRepo.EXPECT().GetOneById(gomock.Any(), userId).Return(&expectedUser, nil)
+		mockPostRepo.EXPECT().GetOneById(gomock.Any(), postId).Return(&expectedPost, nil)
 
 		result, err := service.GetPostById(context.Background(), postId)
 
@@ -48,7 +48,7 @@ func TestPostService_GetPostById(t *testing.T) {
 		postId := uuid.New()
 		mockPostRepo.EXPECT().
 			GetOneById(gomock.Any(), postId).
-			Return(entity.Post{}, repository.ErrNotFound)
+			Return(nil, repository.ErrNotFound)
 		_, err := service.GetPostById(context.Background(), postId)
 		assert.ErrorIs(t, err, ErrPostNotFound)
 	})
@@ -72,11 +72,11 @@ func TestPostService_CreatePost(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockUserRepo.EXPECT().
 			GetOneById(gomock.Any(), userId).
-			Return(expectedUser, nil)
+			Return(&expectedUser, nil)
 
 		mockPostRepo.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, post entity.Post) {
+			Do(func(_ context.Context, post *entity.Post) {
 				assert.Equal(t, "Post", post.Title)
 				assert.Equal(t, "Cool", post.Content)
 				assert.Equal(t, userId, post.UserId)
@@ -95,7 +95,7 @@ func TestPostService_CreatePost(t *testing.T) {
 	t.Run("user not found", func(t *testing.T) {
 		mockUserRepo.EXPECT().
 			GetOneById(gomock.Any(), userId).
-			Return(entity.User{}, repository.ErrNotFound)
+			Return(nil, repository.ErrNotFound)
 
 		result, err := service.CreatePost(context.Background(), userId, "Post", "Content", false)
 
@@ -107,7 +107,7 @@ func TestPostService_CreatePost(t *testing.T) {
 
 		mockUserRepo.EXPECT().
 			GetOneById(gomock.Any(), userId).
-			Return(entity.User{}, ErrUserNotFound)
+			Return(nil, ErrUserNotFound)
 
 		result, err := service.CreatePost(context.Background(), userId, "Post", "Content", false)
 
@@ -120,7 +120,7 @@ func TestPostService_CreatePost(t *testing.T) {
 
 		mockUserRepo.EXPECT().
 			GetOneById(gomock.Any(), userId).
-			Return(expectedUser, nil)
+			Return(&expectedUser, nil)
 
 		mockPostRepo.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
@@ -171,9 +171,9 @@ func TestPostService_TogglePostComments(t *testing.T) {
 	t.Run("success - enable comments", func(t *testing.T) {
 		mockPostRepo.EXPECT().
 			GetOneById(gomock.Any(), postId).
-			Return(existingPost, nil)
+			Return(&existingPost, nil)
 
-		updatedPost := existingPost
+		updatedPost := &existingPost
 		updatedPost.IsCommentable = true
 
 		mockPostRepo.EXPECT().
@@ -188,9 +188,9 @@ func TestPostService_TogglePostComments(t *testing.T) {
 	t.Run("success - disable comments", func(t *testing.T) {
 		mockPostRepo.EXPECT().
 			GetOneById(gomock.Any(), postId).
-			Return(existingPost, nil)
+			Return(&existingPost, nil)
 
-		updatedPost := existingPost
+		updatedPost := &existingPost
 		updatedPost.IsCommentable = false
 
 		mockPostRepo.EXPECT().
@@ -205,7 +205,7 @@ func TestPostService_TogglePostComments(t *testing.T) {
 	t.Run("post not found", func(t *testing.T) {
 		mockPostRepo.EXPECT().
 			GetOneById(gomock.Any(), postId).
-			Return(entity.Post{}, repository.ErrNotFound)
+			Return(nil, repository.ErrNotFound)
 
 		err := service.TogglePostComments(context.Background(), postId, editorId, true)
 
@@ -215,7 +215,7 @@ func TestPostService_TogglePostComments(t *testing.T) {
 	t.Run("no permission - not post owner", func(t *testing.T) {
 		mockPostRepo.EXPECT().
 			GetOneById(gomock.Any(), postId).
-			Return(existingPost, nil)
+			Return(&existingPost, nil)
 
 		err := service.TogglePostComments(context.Background(), postId, otherUserId, true)
 
@@ -227,9 +227,9 @@ func TestPostService_TogglePostComments(t *testing.T) {
 
 		mockPostRepo.EXPECT().
 			GetOneById(gomock.Any(), postId).
-			Return(existingPost, nil)
+			Return(&existingPost, nil)
 
-		updatedPost := existingPost
+		updatedPost := &existingPost
 		updatedPost.IsCommentable = false
 
 		mockPostRepo.EXPECT().

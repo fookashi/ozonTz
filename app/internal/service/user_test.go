@@ -29,7 +29,7 @@ func TestUserService_GetUser(t *testing.T) {
 
 		mockUserRepo.EXPECT().
 			GetOneById(gomock.Any(), userID).
-			Return(expectedUser, nil)
+			Return(&expectedUser, nil)
 
 		result, err := service.GetUser(context.Background(), userID)
 
@@ -43,7 +43,7 @@ func TestUserService_GetUser(t *testing.T) {
 
 		mockUserRepo.EXPECT().
 			GetOneById(gomock.Any(), userID).
-			Return(entity.User{}, repository.ErrNotFound)
+			Return(nil, repository.ErrNotFound)
 
 		result, err := service.GetUser(context.Background(), userID)
 
@@ -64,12 +64,12 @@ func TestUserService_CreateUser(t *testing.T) {
 		username := "newuser"
 
 		mockUserRepo.EXPECT().
-			UsernameExists(gomock.Any(), username).
-			Return(false, nil)
+			GetOneByUsername(gomock.Any(), username).
+			Return(nil, repository.ErrNotFound)
 
 		mockUserRepo.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, user entity.User) {
+			Do(func(_ context.Context, user *entity.User) {
 				assert.Equal(t, username, user.Username)
 			}).
 			Return(nil)
@@ -83,10 +83,14 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("username exists", func(t *testing.T) {
 		username := "existinguser"
+		existingUser := &entity.User{
+			Username: username,
+			Id:       uuid.New(),
+		}
 
 		mockUserRepo.EXPECT().
-			UsernameExists(gomock.Any(), username).
-			Return(true, nil)
+			GetOneByUsername(gomock.Any(), username).
+			Return(existingUser, nil)
 
 		result, err := service.CreateUser(context.Background(), username)
 

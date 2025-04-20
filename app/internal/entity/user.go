@@ -29,9 +29,5 @@ func (u *User) Validate() error {
 		return ErrEmptyUsername
 	}
 
-	if len(u.Roles) == 0 {
-		u.Roles = []string{"user"}
-	}
-
 	return nil
 }

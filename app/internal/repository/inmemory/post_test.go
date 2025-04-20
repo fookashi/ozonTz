@@ -46,11 +46,11 @@ func TestInMemoryPostRepo(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		err := repo.Create(ctx, post1)
+		err := repo.Create(ctx, &post1)
 		assert.NoError(t, err)
 
 		t.Run("canceled context", func(t *testing.T) {
-			err := repo.Create(canceledCtx, post2)
+			err := repo.Create(canceledCtx, &post2)
 			assert.ErrorIs(t, err, repository.ErrContextCanceled)
 		})
 	})
@@ -77,7 +77,7 @@ func TestInMemoryPostRepo(t *testing.T) {
 		updatedPost := post1
 		updatedPost.Title = "Updated Title"
 
-		err := repo.Update(ctx, updatedPost)
+		err := repo.Update(ctx, &updatedPost)
 		assert.NoError(t, err)
 
 		t.Run("verify update", func(t *testing.T) {
@@ -87,14 +87,14 @@ func TestInMemoryPostRepo(t *testing.T) {
 		})
 
 		t.Run("canceled context", func(t *testing.T) {
-			err := repo.Update(canceledCtx, post1)
+			err := repo.Update(canceledCtx, &post1)
 			assert.ErrorIs(t, err, repository.ErrContextCanceled)
 		})
 	})
 
 	t.Run("GetMany", func(t *testing.T) {
-		_ = repo.Create(ctx, post2)
-		_ = repo.Create(ctx, post3)
+		_ = repo.Create(ctx, &post2)
+		_ = repo.Create(ctx, &post3)
 
 		t.Run("default sorting (newest first)", func(t *testing.T) {
 			posts, err := repo.GetMany(ctx, 10, 0, repository.SortByNewest)
@@ -167,7 +167,7 @@ func TestInMemoryPostRepo(t *testing.T) {
 					Title:     "Concurrent Post",
 					CreatedAt: time.Now(),
 				}
-				_ = repo.Create(ctx, post)
+				_ = repo.Create(ctx, &post)
 			}
 			close(done)
 		}()
