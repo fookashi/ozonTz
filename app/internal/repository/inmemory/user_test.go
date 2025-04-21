@@ -11,11 +11,6 @@ import (
 )
 
 func TestInMemoryUserRepo(t *testing.T) {
-	repo := NewUserRepo(10)
-	ctx := context.Background()
-	canceledCtx, cancel := context.WithCancel(ctx)
-	cancel()
-
 	user1 := entity.User{
 		Id:       uuid.New(),
 		Username: "user1",
@@ -26,128 +21,164 @@ func TestInMemoryUserRepo(t *testing.T) {
 		Username: "user2",
 		Roles:    []string{"admin"},
 	}
+	nonExistentID := uuid.New()
 
-	t.Run("Create", func(t *testing.T) {
-		t.Run("success", func(t *testing.T) {
-			err := repo.Create(ctx, &user1)
-			assert.NoError(t, err)
+	tests := []struct {
+		name string
+		run  func(t *testing.T, repo *UserRepo)
+	}{
+		{
+			name: "Create/success",
+			run: func(t *testing.T, repo *UserRepo) {
+				err := repo.Create(context.Background(), &user1)
+				assert.NoError(t, err)
+			},
+		},
+		{
+			name: "Create/canceled context",
+			run: func(t *testing.T, repo *UserRepo) {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				err := repo.Create(ctx, &user1)
+				assert.ErrorIs(t, err, repository.ErrContextCanceled)
+			},
+		},
+		{
+			name: "GetOneById/success",
+			run: func(t *testing.T, repo *UserRepo) {
+				_ = repo.Create(context.Background(), &user1)
+				result, err := repo.GetOneById(context.Background(), user1.Id)
+				assert.NoError(t, err)
+				assert.Equal(t, user1, *result)
+			},
+		},
+		{
+			name: "GetOneById/not found",
+			run: func(t *testing.T, repo *UserRepo) {
+				_, err := repo.GetOneById(context.Background(), nonExistentID)
+				assert.ErrorIs(t, err, repository.ErrNotFound)
+			},
+		},
+		{
+			name: "GetOneById/canceled context",
+			run: func(t *testing.T, repo *UserRepo) {
+				_ = repo.Create(context.Background(), &user1)
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				_, err := repo.GetOneById(ctx, user1.Id)
+				assert.ErrorIs(t, err, repository.ErrContextCanceled)
+			},
+		},
+		{
+			name: "GetManyByIds/success all found",
+			run: func(t *testing.T, repo *UserRepo) {
+				_ = repo.Create(context.Background(), &user1)
+				_ = repo.Create(context.Background(), &user2)
+				result, err := repo.GetManyByIds(context.Background(), []uuid.UUID{user1.Id, user2.Id})
+				assert.NoError(t, err)
+				assert.Len(t, result, 2)
+			},
+		},
+		{
+			name: "GetManyByIds/partial found",
+			run: func(t *testing.T, repo *UserRepo) {
+				_ = repo.Create(context.Background(), &user1)
+				result, err := repo.GetManyByIds(context.Background(), []uuid.UUID{user1.Id, nonExistentID})
+				assert.ErrorIs(t, err, repository.ErrNotFound)
+				assert.Len(t, result, 1)
+			},
+		},
+		{
+			name: "GetManyByIds/none found",
+			run: func(t *testing.T, repo *UserRepo) {
+				result, err := repo.GetManyByIds(context.Background(), []uuid.UUID{nonExistentID})
+				assert.ErrorIs(t, err, repository.ErrNotFound)
+				assert.Empty(t, result)
+			},
+		},
+		{
+			name: "GetManyByIds/empty ids",
+			run: func(t *testing.T, repo *UserRepo) {
+				result, err := repo.GetManyByIds(context.Background(), []uuid.UUID{})
+				assert.NoError(t, err)
+				assert.Empty(t, result)
+			},
+		},
+		{
+			name: "GetManyByIds/canceled context",
+			run: func(t *testing.T, repo *UserRepo) {
+				_ = repo.Create(context.Background(), &user1)
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				_, err := repo.GetManyByIds(ctx, []uuid.UUID{user1.Id})
+				assert.ErrorIs(t, err, repository.ErrContextCanceled)
+			},
+		},
+		{
+			name: "GetOneByUsername/success",
+			run: func(t *testing.T, repo *UserRepo) {
+				_ = repo.Create(context.Background(), &user1)
+				result, err := repo.GetOneByUsername(context.Background(), user1.Username)
+				assert.NoError(t, err)
+				assert.Equal(t, user1, *result)
+			},
+		},
+		{
+			name: "GetOneByUsername/not found",
+			run: func(t *testing.T, repo *UserRepo) {
+				_, err := repo.GetOneByUsername(context.Background(), "nonexistent")
+				assert.ErrorIs(t, err, repository.ErrNotFound)
+			},
+		},
+		{
+			name: "GetOneByUsername/canceled context",
+			run: func(t *testing.T, repo *UserRepo) {
+				_ = repo.Create(context.Background(), &user1)
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				_, err := repo.GetOneByUsername(ctx, user1.Username)
+				assert.ErrorIs(t, err, repository.ErrContextCanceled)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := NewUserRepo(10)
+			tt.run(t, repo)
 		})
+	}
 
-		t.Run("canceled context", func(t *testing.T) {
-			err := repo.Create(canceledCtx, &user2)
-			assert.ErrorIs(t, err, repository.ErrContextCanceled)
-		})
-	})
+	t.Run("Concurrency read/write", func(t *testing.T) {
+		repo := NewUserRepo(10)
+		const numWorkers = 10
+		done := make(chan struct{})
 
-	t.Run("GetOneById", func(t *testing.T) {
-		// Setup
-		_ = repo.Create(ctx, &user1)
-
-		t.Run("success", func(t *testing.T) {
-			result, err := repo.GetOneById(ctx, user1.Id)
-			assert.NoError(t, err)
-			assert.Equal(t, user1, *result)
-		})
-
-		t.Run("not found", func(t *testing.T) {
-			_, err := repo.GetOneById(ctx, uuid.New())
-			assert.ErrorIs(t, err, repository.ErrNotFound)
-		})
-
-		t.Run("canceled context", func(t *testing.T) {
-			_, err := repo.GetOneById(canceledCtx, user1.Id)
-			assert.ErrorIs(t, err, repository.ErrContextCanceled)
-		})
-	})
-
-	t.Run("GetManyByIds", func(t *testing.T) {
-		// Setup
-		_ = repo.Create(ctx, &user2)
-		nonExistentID := uuid.New()
-
-		t.Run("success - all found", func(t *testing.T) {
-			ids := []uuid.UUID{user1.Id, user2.Id}
-			result, err := repo.GetManyByIds(ctx, ids)
-			assert.NoError(t, err)
-			assert.Len(t, result, 2)
-		})
-
-		t.Run("partial found", func(t *testing.T) {
-			ids := []uuid.UUID{user1.Id, nonExistentID}
-			result, err := repo.GetManyByIds(ctx, ids)
-			assert.ErrorIs(t, err, repository.ErrNotFound)
-			assert.Len(t, result, 1)
-		})
-
-		t.Run("none found", func(t *testing.T) {
-			ids := []uuid.UUID{nonExistentID}
-			result, err := repo.GetManyByIds(ctx, ids)
-			assert.ErrorIs(t, err, repository.ErrNotFound)
-			assert.Empty(t, result)
-		})
-
-		t.Run("empty ids", func(t *testing.T) {
-			result, err := repo.GetManyByIds(ctx, []uuid.UUID{})
-			assert.NoError(t, err)
-			assert.Empty(t, result)
-		})
-
-		t.Run("canceled context", func(t *testing.T) {
-			_, err := repo.GetManyByIds(canceledCtx, []uuid.UUID{user1.Id})
-			assert.ErrorIs(t, err, repository.ErrContextCanceled)
-		})
-	})
-
-	t.Run("GetOneByUsername", func(t *testing.T) {
-		t.Run("success", func(t *testing.T) {
-			result, err := repo.GetOneByUsername(ctx, user1.Username)
-			assert.NoError(t, err)
-			assert.Equal(t, user1, *result)
-		})
-
-		t.Run("not found", func(t *testing.T) {
-			_, err := repo.GetOneByUsername(ctx, "nonexistent")
-			assert.ErrorIs(t, err, repository.ErrNotFound)
-		})
-
-		t.Run("canceled context", func(t *testing.T) {
-			_, err := repo.GetOneByUsername(canceledCtx, user1.Username)
-			assert.ErrorIs(t, err, repository.ErrContextCanceled)
-		})
-	})
-
-	t.Run("Concurrency", func(t *testing.T) {
-		t.Run("parallel read/write", func(t *testing.T) {
-			const numWorkers = 10
-			done := make(chan struct{})
-
-			go func() {
-				for i := range numWorkers {
-					user := entity.User{
-						Id:       uuid.New(),
-						Username: "concurrent_" + string(rune(i)),
-					}
-					_ = repo.Create(ctx, &user)
+		go func() {
+			for i := 0; i < numWorkers; i++ {
+				user := entity.User{
+					Id:       uuid.New(),
+					Username: "concurrent_" + string(rune(i)),
 				}
-				close(done)
-			}()
-
-			for range numWorkers {
-				go func() {
-					for {
-						select {
-						case <-done:
-							return
-						default:
-							_, _ = repo.GetOneById(ctx, user1.Id)
-							_, _ = repo.GetManyByIds(ctx, []uuid.UUID{user1.Id, user2.Id})
-							_, _ = repo.UsernameExists(ctx, user1.Username)
-						}
-					}
-				}()
+				_ = repo.Create(context.Background(), &user)
 			}
+			close(done)
+		}()
 
-			<-done
-		})
+		for i := 0; i < numWorkers; i++ {
+			go func() {
+				for {
+					select {
+					case <-done:
+						return
+					default:
+						_, _ = repo.GetOneById(context.Background(), user1.Id)
+						_, _ = repo.GetManyByIds(context.Background(), []uuid.UUID{user1.Id, user2.Id})
+					}
+				}
+			}()
+		}
+
+		<-done
 	})
 }

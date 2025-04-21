@@ -6,8 +6,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,7 +37,6 @@ func (r *UserRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.User, 
 	query := `SELECT id, username, roles FROM users WHERE id = $1`
 	err := r.db.QueryRowContext(ctxWithTimeout, query, id).Scan(&user.Id, &user.Username, pq.Array(&user.Roles))
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("user not found: %v", user)
 		return nil, repository.ErrNotFound
 	}
 	return &user, err
@@ -56,7 +53,7 @@ func (r *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) (map[uuid.
 	query := `SELECT id, username, roles FROM users WHERE id = ANY($1)`
 	rows, err := r.db.QueryContext(ctxWithTimeout, query, pq.Array(ids))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get users by ids: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -65,13 +62,13 @@ func (r *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) (map[uuid.
 		var user entity.User
 		err := rows.Scan(&user.Id, &user.Username, pq.Array(user.Roles))
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan user: %w", err)
+			return nil, err
 		}
 		users[user.Id] = user
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows error: %w", err)
+		return nil, err
 	}
 
 	return users, nil

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -38,7 +39,8 @@ func (s *UserService) CreateUser(ctx context.Context, username string) (*model.U
 		case errors.Is(err, repository.ErrNotFound):
 			// pass
 		default:
-			return nil, fmt.Errorf("failed to check user existence: %w", err)
+			log.Fatalf("%v", err)
+			return nil, err
 		}
 	}
 
@@ -48,11 +50,12 @@ func (s *UserService) CreateUser(ctx context.Context, username string) (*model.U
 
 	newUser, err := entity.NewUser(username)
 	if err != nil {
-		return nil, fmt.Errorf("invalid user data: %w", err)
+		return nil, fmt.Errorf("Validation error: %w", err)
 	}
 
 	if err := s.RepoHolder.UserRepo.Create(ctx, newUser); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrDueUserCreation, err)
+		log.Fatalf("%v", err)
+		return nil, ErrDueUserCreation
 	}
 
 	return &model.User{

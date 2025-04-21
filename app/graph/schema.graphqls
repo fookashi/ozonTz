@@ -18,6 +18,7 @@ type Post {
 type Comment {
   id: ID!
   user: User!
+  parentId: ID
   replies(limit: Int!, offset: Int!): [Comment!]!
   content: String!
   createdAt: Time!
@@ -41,4 +42,8 @@ type Mutation {
   createPost(userId: ID!, title: String!, content: String!, isCommentable: Boolean!): Post!
   createComment(userId: ID!, postId: ID!, parentId: ID, content: String!): Comment!
   togglePostComments(postId: ID!, editor: ID!, enabled: Boolean!): ID!
+}
+
+type Subscription {
+  commentAdded(postId: ID!): Comment!
 }

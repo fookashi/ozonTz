@@ -22,8 +22,11 @@ CREATE TABLE IF NOT EXISTS comments (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_users_roles ON users USING gin(roles);
+
 CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments USING hash(post_id);
 CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments USING hash(parent_id);
+CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments USING btree(created_at);
 
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts USING hash(user_id);
-CREATE INDEX IF NOT EXISTS idx_posts_create_at ON posts USING btree(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts USING btree(created_at);

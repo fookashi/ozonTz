@@ -59,7 +59,7 @@ func TestInMemoryPostRepo(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			result, err := repo.GetOneById(ctx, post1.Id)
 			assert.NoError(t, err)
-			assert.Equal(t, post1, result)
+			assert.Equal(t, &post1, result)
 		})
 
 		t.Run("not found", func(t *testing.T) {

@@ -22,6 +22,9 @@ func NewPostRepo(initSize int) *PostRepo {
 }
 
 func (r *PostRepo) Create(ctx context.Context, post *entity.Post) error {
+	if err := ctx.Err(); err != nil {
+		return repository.ErrContextCanceled
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -30,6 +33,9 @@ func (r *PostRepo) Create(ctx context.Context, post *entity.Post) error {
 }
 
 func (r *PostRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.Post, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, repository.ErrContextCanceled
+	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -85,6 +91,9 @@ func (r *PostRepo) GetMany(ctx context.Context, limit, offset int, sortBy reposi
 }
 
 func (r *PostRepo) Update(ctx context.Context, post *entity.Post) error {
+	if err := ctx.Err(); err != nil {
+		return repository.ErrContextCanceled
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

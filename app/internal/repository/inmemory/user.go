@@ -86,12 +86,3 @@ func (repo *UserRepo) GetOneByUsername(ctx context.Context, username string) (*e
 	}
 	return &user, nil
 }
-func (repo *UserRepo) UsernameExists(ctx context.Context, username string) (bool, error) {
-	if err := ctx.Err(); err != nil {
-		return false, repository.ErrContextCanceled
-	}
-	repo.lock.RLock()
-	defer repo.lock.RUnlock()
-	_, exists := repo.usernameIndex[username]
-	return exists, nil
-}

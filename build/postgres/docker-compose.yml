@@ -17,6 +17,7 @@ services:
       retries: 10
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    restart: unless-stopped
 
   migrate:
     image: migrate/migrate

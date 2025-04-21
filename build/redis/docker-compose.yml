@@ -7,15 +7,15 @@ services:
     volumes:
       - redis-data:/data
     environment:
-      - REDIS_USER=${REDIS_USER}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
+    restart: unless-stopped
 
 volumes:
   redis-data:

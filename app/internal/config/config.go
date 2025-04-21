@@ -10,7 +10,6 @@ type databaseType string
 
 const (
 	inMemory databaseType = "inmemory"
-	redis    databaseType = "redis"
 	postgres databaseType = "postgres"
 )
 
@@ -32,32 +31,24 @@ func (c PostgresConfig) DSN() string {
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode)
 }
 
-type RedisConfig struct {
-	Host     string `env:"REDIS_HOST"`
-	Port     string `env:"REDIS_PORT"`
-	User     string `env:"REDIS_USER"`
-	Password string `env:"REDIS_PASSWORD"`
-	DB       int    `env:"REDIS_DB"`
-}
-
-func (c RedisConfig) DSN() string {
-	if c.Password == "" {
-		return fmt.Sprintf("redis://%s:%s/%d", c.Host, c.Port, c.DB)
-	}
-	return fmt.Sprintf("redis://%s:%s@%s:%s/%d", c.User, c.Password, c.Host, c.Port, c.DB)
-}
-
 type InMemoryConfig struct{}
 
 func (c InMemoryConfig) DSN() string {
 	return "inmemory"
 }
 
+type RedisConfig struct {
+	Host     string `env:"REDIS_HOST"`
+	Port     string `env:"REDIS_PORT"`
+	Password string `env:"REDIS_PASSWORD"`
+	DB       int    `env:"REDIS_DB"`
+}
+
 type Config struct {
-	LogLevel string         `env:"LOG_LVL"`
-	Port     string         `env:"PORT"`
-	DBType   databaseType   `env:"DB_TYPE"`
-	DB       DatabaseConfig `env:"-"`
+	Port   string         `env:"PORT"`
+	DBType databaseType   `env:"DB_TYPE"`
+	DB     DatabaseConfig `env:"-"`
+	RedisConfig
 }
 
 func LoadConfig() (*Config, error) {
@@ -74,12 +65,6 @@ func LoadConfig() (*Config, error) {
 			return nil, fmt.Errorf("failed to load postgres config: %w", err)
 		}
 		cfg.DB = pgConfig
-	case redis:
-		var redisConfig RedisConfig
-		if err := cleanenv.ReadEnv(&redisConfig); err != nil {
-			return nil, fmt.Errorf("failed to load redis config: %w", err)
-		}
-		cfg.DB = redisConfig
 	case inMemory:
 		cfg.DB = InMemoryConfig{}
 	default:

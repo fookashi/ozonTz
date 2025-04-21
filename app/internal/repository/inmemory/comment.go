@@ -26,6 +26,9 @@ func NewCommentRepo(initSize int) *CommentRepo {
 }
 
 func (r *CommentRepo) Create(ctx context.Context, comment *entity.Comment) error {
+	if err := ctx.Err(); err != nil {
+		return repository.ErrContextCanceled
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -41,6 +44,9 @@ func (r *CommentRepo) Create(ctx context.Context, comment *entity.Comment) error
 }
 
 func (r *CommentRepo) GetOneByID(ctx context.Context, commentID uuid.UUID) (*entity.Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, repository.ErrContextCanceled
+	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -53,6 +59,9 @@ func (r *CommentRepo) GetOneByID(ctx context.Context, commentID uuid.UUID) (*ent
 }
 
 func (r *CommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]entity.Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return []entity.Comment{}, repository.ErrContextCanceled
+	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -74,52 +83,37 @@ func (r *CommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, of
 	return result, nil
 }
 
-func (r *CommentRepo) GetReplies(ctx context.Context, parentIds []uuid.UUID, limit, offset int) (map[uuid.UUID][]entity.Comment, error) {
+func (r *CommentRepo) GetCommentReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]entity.Comment, error) {
+	if err := ctx.Err(); err != nil {
+		return []entity.Comment{}, repository.ErrContextCanceled
+	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	if len(parentIds) == 0 {
-		return map[uuid.UUID][]entity.Comment{}, nil
+	if _, exists := r.comments[parentId]; !exists {
+		return nil, repository.ErrNotFound
 	}
 
-	result := make(map[uuid.UUID][]entity.Comment)
-
-	for _, parentId := range parentIds {
-		if _, exists := r.comments[parentId]; !exists {
-			continue
-		}
-
-		replyIds, exists := r.repliesIndex[parentId]
-		if !exists || len(replyIds) == 0 {
-			result[parentId] = []entity.Comment{}
-			continue
-		}
-
-		start := offset
-		if start > len(replyIds) {
-			start = len(replyIds)
-		}
-		end := start + limit
-		if end > len(replyIds) {
-			end = len(replyIds)
-		}
-
-		replies := make([]entity.Comment, 0, end-start)
-		for _, id := range replyIds[start:end] {
-			if comment, exists := r.comments[id]; exists {
-				replies = append(replies, comment)
-			}
-		}
-
-		if len(replies) > 0 {
-			result[parentId] = replies
-		} else {
-			result[parentId] = []entity.Comment{}
-		}
+	replyIDs, exists := r.repliesIndex[parentId]
+	if !exists || len(replyIDs) == 0 {
+		return []entity.Comment{}, nil
 	}
 
-	if len(result) != len(parentIds) {
-		return nil, repository.ErrPartiallyFound
+	start := offset
+	end := offset + limit
+	if start > len(replyIDs) {
+		return []entity.Comment{}, nil
+	}
+	if end > len(replyIDs) {
+		end = len(replyIDs)
+	}
+	paginatedIDs := replyIDs[start:end]
+
+	result := make([]entity.Comment, 0, len(paginatedIDs))
+	for _, id := range paginatedIDs {
+		if comment, exists := r.comments[id]; exists {
+			result = append(result, comment)
+		}
 	}
 
 	return result, nil

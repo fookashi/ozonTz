@@ -1,61 +1,29 @@
 package main
 
 import (
-	"app/graph"
-	"app/internal/config"
-	"app/internal/repository"
-	"app/internal/repository/inmemory"
-	"app/internal/repository/postgres"
-	"app/internal/service"
-	"log"
-	"net/http"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/lru"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
-	"github.com/vektah/gqlparser/v2/ast"
+	"app/internal/app"
+	"app/internal/config"
 )
 
 func main() {
 	cfg := config.MustLoadConfig()
-	var repoHolder *repository.RepoHolder
 
-	switch cfg.DB.(type) {
-	case config.InMemoryConfig:
-		repoHolder = inmemory.NewRepoHolder(50)
-	case config.PostgresConfig:
-		db, _ := sqlx.Connect("postgres", cfg.DB.DSN())
-		repoHolder = postgres.NewRepoHolder(db)
-	default:
-		log.Fatal("Unsupported database type")
-	}
-	resolver := &graph.Resolver{
-		UserService:    &service.UserService{RepoHolder: repoHolder},
-		PostService:    &service.PostService{RepoHolder: repoHolder},
-		CommentService: &service.CommentService{RepoHolder: repoHolder},
-	}
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{
-		Resolvers: resolver,
-	}))
+	application := app.NewApp(context.Background(), cfg)
 
-	srv.AddTransport(transport.Options{})
-	srv.AddTransport(transport.GET{})
-	srv.AddTransport(transport.POST{})
+	go func() {
+		application.HttpApp.Run()
+	}()
 
-	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
+	// graceful stop
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
-	srv.Use(extension.Introspection{})
-	srv.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New[string](100),
-	})
+	<-stop
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
-
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", cfg.Port)
-	log.Fatal(http.ListenAndServe(":"+cfg.Port, nil))
+	application.HttpApp.Stop()
 }

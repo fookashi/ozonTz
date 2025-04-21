@@ -13,31 +13,31 @@ import (
 	uuid "github.com/google/uuid"
 )
 
-// MockIUserService is a mock of IUserService interface.
-type MockIUserService struct {
+// MockUser is a mock of User interface.
+type MockUser struct {
 	ctrl     *gomock.Controller
-	recorder *MockIUserServiceMockRecorder
+	recorder *MockUserMockRecorder
 }
 
-// MockIUserServiceMockRecorder is the mock recorder for MockIUserService.
-type MockIUserServiceMockRecorder struct {
-	mock *MockIUserService
+// MockUserMockRecorder is the mock recorder for MockUser.
+type MockUserMockRecorder struct {
+	mock *MockUser
 }
 
-// NewMockIUserService creates a new mock instance.
-func NewMockIUserService(ctrl *gomock.Controller) *MockIUserService {
-	mock := &MockIUserService{ctrl: ctrl}
-	mock.recorder = &MockIUserServiceMockRecorder{mock}
+// NewMockUser creates a new mock instance.
+func NewMockUser(ctrl *gomock.Controller) *MockUser {
+	mock := &MockUser{ctrl: ctrl}
+	mock.recorder = &MockUserMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIUserService) EXPECT() *MockIUserServiceMockRecorder {
+func (m *MockUser) EXPECT() *MockUserMockRecorder {
 	return m.recorder
 }
 
 // CreateUser mocks base method.
-func (m *MockIUserService) CreateUser(ctx context.Context, username string) (*model.User, error) {
+func (m *MockUser) CreateUser(ctx context.Context, username string) (*model.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, username)
 	ret0, _ := ret[0].(*model.User)
@@ -46,13 +46,13 @@ func (m *MockIUserService) CreateUser(ctx context.Context, username string) (*mo
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockIUserServiceMockRecorder) CreateUser(ctx, username interface{}) *gomock.Call {
+func (mr *MockUserMockRecorder) CreateUser(ctx, username interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockIUserService)(nil).CreateUser), ctx, username)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUser)(nil).CreateUser), ctx, username)
 }
 
 // GetUser mocks base method.
-func (m *MockIUserService) GetUser(ctx context.Context, id uuid.UUID) (*model.User, error) {
+func (m *MockUser) GetUser(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUser", ctx, id)
 	ret0, _ := ret[0].(*model.User)
@@ -61,36 +61,36 @@ func (m *MockIUserService) GetUser(ctx context.Context, id uuid.UUID) (*model.Us
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockIUserServiceMockRecorder) GetUser(ctx, id interface{}) *gomock.Call {
+func (mr *MockUserMockRecorder) GetUser(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockIUserService)(nil).GetUser), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUser)(nil).GetUser), ctx, id)
 }
 
-// MockIPostService is a mock of IPostService interface.
-type MockIPostService struct {
+// MockPost is a mock of Post interface.
+type MockPost struct {
 	ctrl     *gomock.Controller
-	recorder *MockIPostServiceMockRecorder
+	recorder *MockPostMockRecorder
 }
 
-// MockIPostServiceMockRecorder is the mock recorder for MockIPostService.
-type MockIPostServiceMockRecorder struct {
-	mock *MockIPostService
+// MockPostMockRecorder is the mock recorder for MockPost.
+type MockPostMockRecorder struct {
+	mock *MockPost
 }
 
-// NewMockIPostService creates a new mock instance.
-func NewMockIPostService(ctrl *gomock.Controller) *MockIPostService {
-	mock := &MockIPostService{ctrl: ctrl}
-	mock.recorder = &MockIPostServiceMockRecorder{mock}
+// NewMockPost creates a new mock instance.
+func NewMockPost(ctrl *gomock.Controller) *MockPost {
+	mock := &MockPost{ctrl: ctrl}
+	mock.recorder = &MockPostMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIPostService) EXPECT() *MockIPostServiceMockRecorder {
+func (m *MockPost) EXPECT() *MockPostMockRecorder {
 	return m.recorder
 }
 
 // CreatePost mocks base method.
-func (m *MockIPostService) CreatePost(ctx context.Context, userId uuid.UUID, title, content string, isCommentable bool) (*model.Post, error) {
+func (m *MockPost) CreatePost(ctx context.Context, userId uuid.UUID, title, content string, isCommentable bool) (*model.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePost", ctx, userId, title, content, isCommentable)
 	ret0, _ := ret[0].(*model.Post)
@@ -99,13 +99,13 @@ func (m *MockIPostService) CreatePost(ctx context.Context, userId uuid.UUID, tit
 }
 
 // CreatePost indicates an expected call of CreatePost.
-func (mr *MockIPostServiceMockRecorder) CreatePost(ctx, userId, title, content, isCommentable interface{}) *gomock.Call {
+func (mr *MockPostMockRecorder) CreatePost(ctx, userId, title, content, isCommentable interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockIPostService)(nil).CreatePost), ctx, userId, title, content, isCommentable)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockPost)(nil).CreatePost), ctx, userId, title, content, isCommentable)
 }
 
 // GetPostById mocks base method.
-func (m *MockIPostService) GetPostById(ctx context.Context, id uuid.UUID) (*model.Post, error) {
+func (m *MockPost) GetPostById(ctx context.Context, id uuid.UUID) (*model.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPostById", ctx, id)
 	ret0, _ := ret[0].(*model.Post)
@@ -114,13 +114,13 @@ func (m *MockIPostService) GetPostById(ctx context.Context, id uuid.UUID) (*mode
 }
 
 // GetPostById indicates an expected call of GetPostById.
-func (mr *MockIPostServiceMockRecorder) GetPostById(ctx, id interface{}) *gomock.Call {
+func (mr *MockPostMockRecorder) GetPostById(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostById", reflect.TypeOf((*MockIPostService)(nil).GetPostById), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostById", reflect.TypeOf((*MockPost)(nil).GetPostById), ctx, id)
 }
 
 // GetPosts mocks base method.
-func (m *MockIPostService) GetPosts(ctx context.Context, limit, offset int, sortBy *model.SortBy) ([]*model.Post, error) {
+func (m *MockPost) GetPosts(ctx context.Context, limit, offset int, sortBy *model.SortBy) ([]*model.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPosts", ctx, limit, offset, sortBy)
 	ret0, _ := ret[0].([]*model.Post)
@@ -129,13 +129,13 @@ func (m *MockIPostService) GetPosts(ctx context.Context, limit, offset int, sort
 }
 
 // GetPosts indicates an expected call of GetPosts.
-func (mr *MockIPostServiceMockRecorder) GetPosts(ctx, limit, offset, sortBy interface{}) *gomock.Call {
+func (mr *MockPostMockRecorder) GetPosts(ctx, limit, offset, sortBy interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPosts", reflect.TypeOf((*MockIPostService)(nil).GetPosts), ctx, limit, offset, sortBy)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPosts", reflect.TypeOf((*MockPost)(nil).GetPosts), ctx, limit, offset, sortBy)
 }
 
 // TogglePostComments mocks base method.
-func (m *MockIPostService) TogglePostComments(ctx context.Context, postId, editorId uuid.UUID, enabled bool) error {
+func (m *MockPost) TogglePostComments(ctx context.Context, postId, editorId uuid.UUID, enabled bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TogglePostComments", ctx, postId, editorId, enabled)
 	ret0, _ := ret[0].(error)
@@ -143,7 +143,75 @@ func (m *MockIPostService) TogglePostComments(ctx context.Context, postId, edito
 }
 
 // TogglePostComments indicates an expected call of TogglePostComments.
-func (mr *MockIPostServiceMockRecorder) TogglePostComments(ctx, postId, editorId, enabled interface{}) *gomock.Call {
+func (mr *MockPostMockRecorder) TogglePostComments(ctx, postId, editorId, enabled interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TogglePostComments", reflect.TypeOf((*MockIPostService)(nil).TogglePostComments), ctx, postId, editorId, enabled)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TogglePostComments", reflect.TypeOf((*MockPost)(nil).TogglePostComments), ctx, postId, editorId, enabled)
+}
+
+// MockComment is a mock of Comment interface.
+type MockComment struct {
+	ctrl     *gomock.Controller
+	recorder *MockCommentMockRecorder
+}
+
+// MockCommentMockRecorder is the mock recorder for MockComment.
+type MockCommentMockRecorder struct {
+	mock *MockComment
+}
+
+// NewMockComment creates a new mock instance.
+func NewMockComment(ctrl *gomock.Controller) *MockComment {
+	mock := &MockComment{ctrl: ctrl}
+	mock.recorder = &MockCommentMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComment) EXPECT() *MockCommentMockRecorder {
+	return m.recorder
+}
+
+// CreateComment mocks base method.
+func (m *MockComment) CreateComment(ctx context.Context, userId, postId uuid.UUID, parentId *uuid.UUID, content string) (*model.Comment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateComment", ctx, userId, postId, parentId, content)
+	ret0, _ := ret[0].(*model.Comment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateComment indicates an expected call of CreateComment.
+func (mr *MockCommentMockRecorder) CreateComment(ctx, userId, postId, parentId, content interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateComment", reflect.TypeOf((*MockComment)(nil).CreateComment), ctx, userId, postId, parentId, content)
+}
+
+// GetByPost mocks base method.
+func (m *MockComment) GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]*model.Comment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByPost", ctx, postId, limit, offset)
+	ret0, _ := ret[0].([]*model.Comment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByPost indicates an expected call of GetByPost.
+func (mr *MockCommentMockRecorder) GetByPost(ctx, postId, limit, offset interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByPost", reflect.TypeOf((*MockComment)(nil).GetByPost), ctx, postId, limit, offset)
+}
+
+// GetCommentReplies mocks base method.
+func (m *MockComment) GetCommentReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]*model.Comment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCommentReplies", ctx, parentId, limit, offset)
+	ret0, _ := ret[0].([]*model.Comment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCommentReplies indicates an expected call of GetCommentReplies.
+func (mr *MockCommentMockRecorder) GetCommentReplies(ctx, parentId, limit, offset interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommentReplies", reflect.TypeOf((*MockComment)(nil).GetCommentReplies), ctx, parentId, limit, offset)
 }

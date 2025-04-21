@@ -36,7 +36,7 @@ type CommentRepo interface {
 	GetOneByID(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error)
 
 	GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]entity.Comment, error)
-	GetReplies(ctx context.Context, parentId []uuid.UUID, limit, offset int) (map[uuid.UUID][]entity.Comment, error)
+	GetCommentReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]entity.Comment, error)
 }
 
 type RepoHolder struct {

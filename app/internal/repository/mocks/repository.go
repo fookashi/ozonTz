@@ -5,8 +5,8 @@
 package mock_repository
 
 import (
-	"app/internal/entity"
-	"app/internal/repository"
+	entity "app/internal/entity"
+	repository "app/internal/repository"
 	context "context"
 	reflect "reflect"
 
@@ -214,19 +214,34 @@ func (mr *MockCommentRepoMockRecorder) Create(ctx, comment interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCommentRepo)(nil).Create), ctx, comment)
 }
 
-// GetByPosts mocks base method.
-func (m *MockCommentRepo) GetByPosts(ctx context.Context, postIds []uuid.UUID, limit, offset int) (map[uuid.UUID][]entity.Comment, error) {
+// GetByPost mocks base method.
+func (m *MockCommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]entity.Comment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByPosts", ctx, postIds, limit, offset)
-	ret0, _ := ret[0].(map[uuid.UUID][]entity.Comment)
+	ret := m.ctrl.Call(m, "GetByPost", ctx, postId, limit, offset)
+	ret0, _ := ret[0].([]entity.Comment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByPosts indicates an expected call of GetByPosts.
-func (mr *MockCommentRepoMockRecorder) GetByPosts(ctx, postIds, limit, offset interface{}) *gomock.Call {
+// GetByPost indicates an expected call of GetByPost.
+func (mr *MockCommentRepoMockRecorder) GetByPost(ctx, postId, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByPosts", reflect.TypeOf((*MockCommentRepo)(nil).GetByPosts), ctx, postIds, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByPost", reflect.TypeOf((*MockCommentRepo)(nil).GetByPost), ctx, postId, limit, offset)
+}
+
+// GetCommentReplies mocks base method.
+func (m *MockCommentRepo) GetCommentReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]entity.Comment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCommentReplies", ctx, parentId, limit, offset)
+	ret0, _ := ret[0].([]entity.Comment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCommentReplies indicates an expected call of GetCommentReplies.
+func (mr *MockCommentRepoMockRecorder) GetCommentReplies(ctx, parentId, limit, offset interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommentReplies", reflect.TypeOf((*MockCommentRepo)(nil).GetCommentReplies), ctx, parentId, limit, offset)
 }
 
 // GetOneByID mocks base method.
@@ -242,19 +257,4 @@ func (m *MockCommentRepo) GetOneByID(ctx context.Context, commentId uuid.UUID) (
 func (mr *MockCommentRepoMockRecorder) GetOneByID(ctx, commentId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOneByID", reflect.TypeOf((*MockCommentRepo)(nil).GetOneByID), ctx, commentId)
-}
-
-// GetReplies mocks base method.
-func (m *MockCommentRepo) GetReplies(ctx context.Context, parentId []uuid.UUID, limit, offset int) (map[uuid.UUID][]entity.Comment, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetReplies", ctx, parentId, limit, offset)
-	ret0, _ := ret[0].(map[uuid.UUID][]entity.Comment)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetReplies indicates an expected call of GetReplies.
-func (mr *MockCommentRepoMockRecorder) GetReplies(ctx, parentId, limit, offset interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReplies", reflect.TypeOf((*MockCommentRepo)(nil).GetReplies), ctx, parentId, limit, offset)
 }

@@ -6,7 +6,6 @@ services:
     container_name: ozon-app
     environment:
       - DB_TYPE=inmemory
-      - LOG_LVL=${LOG_LVL}
       - PORT=${APP_PORT}
     ports:
       - "${APP_PORT}:${APP_PORT}"

@@ -6,11 +6,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 type CommentRepo struct {
@@ -57,35 +55,26 @@ func (r *CommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, of
 	var comments []entity.Comment
 	err := r.db.SelectContext(ctx, &comments, query, postId, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get comments by posts: %w", err)
+		return nil, err
 	}
 
 	return comments, nil
 }
 
-func (r *CommentRepo) GetReplies(ctx context.Context, parentIds []uuid.UUID, limit, offset int) (map[uuid.UUID][]entity.Comment, error) {
-	if len(parentIds) == 0 {
-		return map[uuid.UUID][]entity.Comment{}, nil
-	}
-
+func (r *CommentRepo) GetCommentReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]entity.Comment, error) {
 	query := `
         SELECT id, user_id, post_id, parent_id, content, created_at
         FROM comments
-        WHERE parent_id = ANY($1)
+        WHERE parent_id = $1
         ORDER BY created_at ASC
         LIMIT $2 OFFSET $3
     `
 
 	var comments []entity.Comment
-	err := r.db.SelectContext(ctx, &comments, query, pq.Array(parentIds), limit, offset)
+	err := r.db.SelectContext(ctx, &comments, query, parentId, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get comment replies: %w", err)
+		return nil, err
 	}
 
-	replies := make(map[uuid.UUID][]entity.Comment)
-	for _, comment := range comments {
-		replies[*comment.ParentId] = append(replies[*comment.ParentId], comment)
-	}
-
-	return replies, nil
+	return comments, nil
 }

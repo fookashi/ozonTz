@@ -5,7 +5,6 @@ import (
 	"app/internal/entity"
 	"app/internal/repository"
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -52,7 +51,7 @@ func (s *PostService) GetPosts(ctx context.Context, limit, offset int, sortBy *m
 		rSortBy,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get posts: %w", err)
+		return nil, err
 	}
 
 	userIds := make([]uuid.UUID, 0, len(postEntities))
@@ -62,7 +61,7 @@ func (s *PostService) GetPosts(ctx context.Context, limit, offset int, sortBy *m
 
 	users, err := s.RepoHolder.UserRepo.GetManyByIds(ctx, userIds)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get users: %w", err)
+		return nil, err
 	}
 
 	usersMap := make(map[uuid.UUID]entity.User, len(users))
@@ -74,7 +73,7 @@ func (s *PostService) GetPosts(ctx context.Context, limit, offset int, sortBy *m
 	for _, postEntity := range postEntities {
 		userEntity, exists := usersMap[postEntity.UserId]
 		if !exists {
-			return nil, fmt.Errorf("user not found for post %s", postEntity.Id)
+			return nil, ErrUserNotFound
 		}
 
 		posts = append(posts, &model.Post{

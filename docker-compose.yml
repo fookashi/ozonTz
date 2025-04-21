@@ -3,9 +3,29 @@ services:
     extends:
       file: build/app/docker-compose.yml
       service: app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB}
     networks:
       - app_network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    extends:
+      file: build/redis/docker-compose.yml
+      service: redis
+    networks:
+     - app_network
+    volumes:
+      - redis-data:/data
 
 networks:
   app_network:
     driver: bridge
+
+volumes:
+  redis-data:
