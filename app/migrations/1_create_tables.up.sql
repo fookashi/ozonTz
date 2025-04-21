@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     is_commentable BOOLEAN NOT NULL DEFAULT TRUE,
@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS posts (
 
 CREATE TABLE IF NOT EXISTS comments (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id),
-    post_id UUID NOT NULL REFERENCES posts(id),
-    parent_id UUID REFERENCES comments(id),
+    user_id UUID NOT NULL,
+    post_id UUID NOT NULL,
+    parent_id UUID,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
