@@ -33,7 +33,7 @@ type PostRepo interface {
 
 type CommentRepo interface {
 	Create(ctx context.Context, comment *entity.Comment) error
-	GetOneByID(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error)
+	GetOneById(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error)
 
 	GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]entity.Comment, error)
 	GetCommentReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]entity.Comment, error)

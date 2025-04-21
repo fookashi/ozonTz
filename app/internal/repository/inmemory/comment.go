@@ -43,14 +43,14 @@ func (r *CommentRepo) Create(ctx context.Context, comment *entity.Comment) error
 	return nil
 }
 
-func (r *CommentRepo) GetOneByID(ctx context.Context, commentID uuid.UUID) (*entity.Comment, error) {
+func (r *CommentRepo) GetOneById(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, repository.ErrContextCanceled
 	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	comment, exists := r.comments[commentID]
+	comment, exists := r.comments[commentId]
 	if !exists {
 		return nil, repository.ErrNotFound
 	}

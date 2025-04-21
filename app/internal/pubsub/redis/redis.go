@@ -32,7 +32,7 @@ func (r *RedisPubSub) PublishComment(ctx context.Context, postID uuid.UUID, comm
 		return fmt.Errorf("failed to marshal comment: %w", err)
 	}
 
-	channel := r.getChannelName(postID)
+	channel := r.getChannel(postID)
 	if err := r.client.Publish(ctx, channel, payload).Err(); err != nil {
 		return fmt.Errorf("failed to publish comment: %w", err)
 	}
@@ -42,7 +42,7 @@ func (r *RedisPubSub) PublishComment(ctx context.Context, postID uuid.UUID, comm
 }
 
 func (r *RedisPubSub) SubscribeOnComments(ctx context.Context, postID uuid.UUID) (<-chan *model.Comment, error) {
-	channel := r.getChannelName(postID)
+	channel := r.getChannel(postID)
 	pubsub := r.client.Subscribe(ctx, channel)
 
 	r.mu.Lock()
@@ -134,6 +134,6 @@ func (r *RedisPubSub) Close() error {
 	return err
 }
 
-func (r *RedisPubSub) getChannelName(postID uuid.UUID) string {
+func (r *RedisPubSub) getChannel(postID uuid.UUID) string {
 	return fmt.Sprintf("comments:%s", postID.String())
 }

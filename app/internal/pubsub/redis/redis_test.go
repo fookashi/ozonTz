@@ -29,7 +29,7 @@ func TestRedisPubSub(t *testing.T) {
 			payload, err := json.Marshal(comment)
 			require.NoError(t, err)
 
-			channel := pubsub.getChannelName(postID)
+			channel := pubsub.getChannel(postID)
 			mock.ExpectPublish(channel, payload).SetVal(1)
 
 			err = pubsub.PublishComment(ctx, postID, comment)
@@ -44,7 +44,7 @@ func TestRedisPubSub(t *testing.T) {
 			payload, err := json.Marshal(comment)
 			require.NoError(t, err)
 
-			channel := pubsub.getChannelName(postID)
+			channel := pubsub.getChannel(postID)
 			mock.ExpectPublish(channel, payload).SetErr(errors.New("publish failed"))
 
 			err = pubsub.PublishComment(ctx, postID, comment)
@@ -58,7 +58,7 @@ func TestRedisPubSub(t *testing.T) {
 			pubsub := NewRedisPubSub(nil)
 			postID := uuid.New()
 			expected := "comments:" + postID.String()
-			assert.Equal(t, expected, pubsub.getChannelName(postID))
+			assert.Equal(t, expected, pubsub.getChannel(postID))
 		})
 	})
 }

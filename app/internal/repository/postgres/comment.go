@@ -4,19 +4,50 @@ import (
 	"app/internal/entity"
 	"app/internal/repository"
 	"context"
-	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type CommentRepo struct {
-	db *sqlx.DB
+	pool *pgxpool.Pool
 }
 
-func NewCommentRepo(db *sqlx.DB) *CommentRepo {
-	return &CommentRepo{db: db}
+func NewCommentRepo(pool *pgxpool.Pool) *CommentRepo {
+	return &CommentRepo{pool: pool}
+}
+
+func (r *CommentRepo) GetOneById(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var comment entity.Comment
+	query := `
+        SELECT id, user_id, post_id, parent_id, content, created_at
+        FROM comments
+        WHERE id = $1
+    `
+
+	err := r.pool.QueryRow(ctx, query, commentId).Scan(
+		&comment.Id,
+		&comment.UserId,
+		&comment.PostId,
+		&comment.ParentId,
+		&comment.Content,
+		&comment.CreatedAt,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, repository.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &comment, nil
 }
 
 func (r *CommentRepo) Create(ctx context.Context, comment *entity.Comment) error {
@@ -24,23 +55,8 @@ func (r *CommentRepo) Create(ctx context.Context, comment *entity.Comment) error
 		INSERT INTO comments (id, user_id, post_id, parent_id, content, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := r.db.ExecContext(ctx, query,
-		comment.Id, comment.UserId, comment.PostId, comment.ParentId, comment.Content, comment.CreatedAt)
+	_, err := r.pool.Exec(ctx, query, comment.Id, comment.UserId, comment.PostId, comment.ParentId, comment.Content, comment.CreatedAt)
 	return err
-}
-
-func (r *CommentRepo) GetOneByID(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error) {
-	var comment entity.Comment
-	query := `
-		SELECT id, user_id, post_id, parent_id, content, created_at
-		FROM comments
-		WHERE id = $1
-	`
-	err := r.db.GetContext(ctx, &comment, query, commentId)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, repository.ErrNotFound
-	}
-	return &comment, err
 }
 
 func (r *CommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, offset int) ([]entity.Comment, error) {
@@ -52,13 +68,23 @@ func (r *CommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, of
         LIMIT $2 OFFSET $3
     `
 
-	var comments []entity.Comment
-	err := r.db.SelectContext(ctx, &comments, query, postId, limit, offset)
+	rows, err := r.pool.Query(ctx, query, postId, limit, offset)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	return comments, nil
+	var comments []entity.Comment
+	for rows.Next() {
+		var comment entity.Comment
+		if err := rows.Scan(
+			&comment.Id, &comment.UserId, &comment.PostId, &comment.ParentId, &comment.Content, &comment.CreatedAt); err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	return comments, rows.Err()
 }
 
 func (r *CommentRepo) GetCommentReplies(ctx context.Context, parentId uuid.UUID, limit, offset int) ([]entity.Comment, error) {
@@ -70,11 +96,21 @@ func (r *CommentRepo) GetCommentReplies(ctx context.Context, parentId uuid.UUID,
         LIMIT $2 OFFSET $3
     `
 
-	var comments []entity.Comment
-	err := r.db.SelectContext(ctx, &comments, query, parentId, limit, offset)
+	rows, err := r.pool.Query(ctx, query, parentId, limit, offset)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	return comments, nil
+	var comments []entity.Comment
+	for rows.Next() {
+		var comment entity.Comment
+		if err := rows.Scan(
+			&comment.Id, &comment.UserId, &comment.PostId, &comment.ParentId, &comment.Content, &comment.CreatedAt); err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	return comments, rows.Err()
 }

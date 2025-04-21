@@ -1,15 +1,16 @@
+// 4. repo_holder.go
 package postgres
 
 import (
 	"app/internal/repository"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-func NewRepoHolder(db *sqlx.DB) *repository.RepoHolder {
+func NewRepoHolder(pool *pgxpool.Pool) *repository.RepoHolder {
 	return &repository.RepoHolder{
-		UserRepo:    NewUserRepo(db),
-		PostRepo:    NewPostRepo(db),
-		CommentRepo: NewCommentRepo(db),
+		UserRepo:    NewUserRepo(pool),
+		PostRepo:    NewPostRepo(pool),
+		CommentRepo: NewCommentRepo(pool),
 	}
 }

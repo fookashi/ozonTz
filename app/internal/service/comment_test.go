@@ -55,7 +55,7 @@ func TestCommentService_CreateComment(t *testing.T) {
 			}, nil)
 
 		mockCommentRepo.EXPECT().
-			GetOneByID(gomock.Any(), parentID).
+			GetOneById(gomock.Any(), parentID).
 			Return(&entity.Comment{}, nil)
 
 		mockCommentRepo.EXPECT().

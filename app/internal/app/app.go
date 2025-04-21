@@ -14,7 +14,7 @@ import (
 	"log"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type App struct {
@@ -24,8 +24,10 @@ type App struct {
 	RepoHolder *repository.RepoHolder
 }
 
+const inmemoryRepoSize int = 50
+
 func NewApp(ctx context.Context, cfg *config.Config) *App {
-	repoHolder := initRepositories(cfg)
+	repoHolder := initRepositories(ctx, cfg)
 	pubsub := initPubSub(cfg)
 	services := &service.Services{
 		User:    &service.UserService{RepoHolder: repoHolder},
@@ -50,16 +52,16 @@ func NewApp(ctx context.Context, cfg *config.Config) *App {
 	}
 }
 
-func initRepositories(cfg *config.Config) *repository.RepoHolder {
+func initRepositories(ctx context.Context, cfg *config.Config) *repository.RepoHolder {
 	switch cfg.DB.(type) {
 	case config.InMemoryConfig:
-		return inmemory.NewRepoHolder(50)
+		return inmemory.NewRepoHolder(inmemoryRepoSize)
 	case config.PostgresConfig:
-		db, err := sqlx.Connect("postgres", cfg.DB.DSN())
+		pool, err := pgxpool.Connect(ctx, cfg.DB.DSN())
 		if err != nil {
 			log.Fatalf("failed to connect to postgres: %v", err)
 		}
-		return postgres.NewRepoHolder(db)
+		return postgres.NewRepoHolder(pool)
 	default:
 		log.Fatal("Unsupported database type")
 		return nil

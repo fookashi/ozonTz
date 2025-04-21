@@ -37,7 +37,7 @@ func (s *CommentService) CreateComment(ctx context.Context, userId uuid.UUID, po
 	}
 
 	if parentId != nil {
-		_, err := s.RepoHolder.CommentRepo.GetOneByID(ctx, *parentId)
+		_, err := s.RepoHolder.CommentRepo.GetOneById(ctx, *parentId)
 		if err != nil {
 			return nil, ErrParentCommentNotFound
 		}

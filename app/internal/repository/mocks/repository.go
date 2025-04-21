@@ -244,17 +244,17 @@ func (mr *MockCommentRepoMockRecorder) GetCommentReplies(ctx, parentId, limit, o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommentReplies", reflect.TypeOf((*MockCommentRepo)(nil).GetCommentReplies), ctx, parentId, limit, offset)
 }
 
-// GetOneByID mocks base method.
-func (m *MockCommentRepo) GetOneByID(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error) {
+// GetOneById mocks base method.
+func (m *MockCommentRepo) GetOneById(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOneByID", ctx, commentId)
+	ret := m.ctrl.Call(m, "GetOneById", ctx, commentId)
 	ret0, _ := ret[0].(*entity.Comment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetOneByID indicates an expected call of GetOneByID.
-func (mr *MockCommentRepoMockRecorder) GetOneByID(ctx, commentId interface{}) *gomock.Call {
+// GetOneById indicates an expected call of GetOneById.
+func (mr *MockCommentRepoMockRecorder) GetOneById(ctx, commentId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOneByID", reflect.TypeOf((*MockCommentRepo)(nil).GetOneByID), ctx, commentId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOneById", reflect.TypeOf((*MockCommentRepo)(nil).GetOneById), ctx, commentId)
 }

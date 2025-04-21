@@ -59,7 +59,7 @@ func TestCommentRepo(t *testing.T) {
 			name: "GetOneByID/success",
 			run: func(t *testing.T, repo *CommentRepo) {
 				_ = repo.Create(context.Background(), &baseComment)
-				result, err := repo.GetOneByID(context.Background(), baseComment.Id)
+				result, err := repo.GetOneById(context.Background(), baseComment.Id)
 				assert.NoError(t, err)
 				assert.Equal(t, baseComment, *result)
 			},
@@ -67,7 +67,7 @@ func TestCommentRepo(t *testing.T) {
 		{
 			name: "GetOneByID/not found",
 			run: func(t *testing.T, repo *CommentRepo) {
-				_, err := repo.GetOneByID(context.Background(), nonExistentID)
+				_, err := repo.GetOneById(context.Background(), nonExistentID)
 				assert.ErrorIs(t, err, repository.ErrNotFound)
 			},
 		},
@@ -77,7 +77,7 @@ func TestCommentRepo(t *testing.T) {
 				_ = repo.Create(context.Background(), &baseComment)
 				ctx, cancel := context.WithCancel(context.Background())
 				cancel()
-				_, err := repo.GetOneByID(ctx, baseComment.Id)
+				_, err := repo.GetOneById(ctx, baseComment.Id)
 				assert.ErrorIs(t, err, repository.ErrContextCanceled)
 			},
 		},
@@ -166,7 +166,7 @@ func TestCommentRepo(t *testing.T) {
 					case <-done:
 						return
 					default:
-						_, _ = repo.GetOneByID(context.Background(), baseComment.Id)
+						_, _ = repo.GetOneById(context.Background(), baseComment.Id)
 						_, _ = repo.GetByPost(context.Background(), postID, 10, 0)
 					}
 				}

@@ -4,39 +4,39 @@ import (
 	"app/internal/entity"
 	"app/internal/repository"
 	"context"
-	"database/sql"
 	"errors"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type UserRepo struct {
-	db *sqlx.DB
+	pool *pgxpool.Pool
 }
 
-func NewUserRepo(db *sqlx.DB) *UserRepo {
-	return &UserRepo{db: db}
+func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
+	return &UserRepo{pool: pool}
 }
 
 func (r *UserRepo) Create(ctx context.Context, user *entity.User) error {
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	query := `INSERT INTO users (id, username, roles) VALUES ($1, $2, $3)`
-	_, err := r.db.ExecContext(ctxWithTimeout, query, user.Id, user.Username, pq.Array(user.Roles))
+	_, err := r.pool.Exec(ctx, query, user.Id, user.Username, user.Roles)
 	return err
 }
 
 func (r *UserRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.User, error) {
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	var user entity.User
 	query := `SELECT id, username, roles FROM users WHERE id = $1`
-	err := r.db.QueryRowContext(ctxWithTimeout, query, id).Scan(&user.Id, &user.Username, pq.Array(&user.Roles))
-	if errors.Is(err, sql.ErrNoRows) {
+	err := r.pool.QueryRow(ctx, query, id).Scan(&user.Id, &user.Username, &user.Roles)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, repository.ErrNotFound
 	}
 	return &user, err
@@ -47,40 +47,36 @@ func (r *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) (map[uuid.
 		return map[uuid.UUID]entity.User{}, nil
 	}
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	query := `SELECT id, username, roles FROM users WHERE id = ANY($1)`
-	rows, err := r.db.QueryContext(ctxWithTimeout, query, pq.Array(ids))
+	rows, err := r.pool.Query(ctx, query, ids)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	users := make(map[uuid.UUID]entity.User, len(ids))
+	users := make(map[uuid.UUID]entity.User)
 	for rows.Next() {
 		var user entity.User
-		err := rows.Scan(&user.Id, &user.Username, pq.Array(user.Roles))
-		if err != nil {
+		if err := rows.Scan(&user.Id, &user.Username, &user.Roles); err != nil {
 			return nil, err
 		}
 		users[user.Id] = user
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return users, nil
+	return users, rows.Err()
 }
 
 func (r *UserRepo) GetOneByUsername(ctx context.Context, username string) (*entity.User, error) {
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	var user entity.User
 	query := `SELECT id, username, roles FROM users WHERE username = $1`
-	err := r.db.QueryRowContext(ctxWithTimeout, query, username).Scan(&user.Id, &user.Username, pq.Array(&user.Roles))
-	if errors.Is(err, sql.ErrNoRows) {
+	err := r.pool.QueryRow(ctx, query, username).Scan(&user.Id, &user.Username, &user.Roles)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, repository.ErrNotFound
 	}
 	return &user, err
