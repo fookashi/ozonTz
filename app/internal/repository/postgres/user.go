@@ -9,15 +9,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type UserRepo struct {
-	pool *pgxpool.Pool
+	db Database
 }
 
-func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
-	return &UserRepo{pool: pool}
+func NewUserRepo(db Database) *UserRepo {
+	return &UserRepo{db: db}
 }
 
 func (r *UserRepo) Create(ctx context.Context, user *entity.User) error {
@@ -25,7 +24,7 @@ func (r *UserRepo) Create(ctx context.Context, user *entity.User) error {
 	defer cancel()
 
 	query := `INSERT INTO users (id, username, roles) VALUES ($1, $2, $3)`
-	_, err := r.pool.Exec(ctx, query, user.Id, user.Username, user.Roles)
+	_, err := r.db.Exec(ctx, query, user.Id, user.Username, user.Roles)
 	return err
 }
 
@@ -35,10 +34,16 @@ func (r *UserRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.User, 
 
 	var user entity.User
 	query := `SELECT id, username, roles FROM users WHERE id = $1`
-	err := r.pool.QueryRow(ctx, query, id).Scan(&user.Id, &user.Username, &user.Roles)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, repository.ErrNotFound
+	err := r.db.QueryRow(ctx, query, id).Scan(&user.Id, &user.Username, &user.Roles)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return nil, repository.ErrNotFound
+		default:
+			return nil, err
+		}
 	}
+
 	return &user, err
 }
 
@@ -51,7 +56,7 @@ func (r *UserRepo) GetManyByIds(ctx context.Context, ids []uuid.UUID) (map[uuid.
 	defer cancel()
 
 	query := `SELECT id, username, roles FROM users WHERE id = ANY($1)`
-	rows, err := r.pool.Query(ctx, query, ids)
+	rows, err := r.db.Query(ctx, query, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +80,14 @@ func (r *UserRepo) GetOneByUsername(ctx context.Context, username string) (*enti
 
 	var user entity.User
 	query := `SELECT id, username, roles FROM users WHERE username = $1`
-	err := r.pool.QueryRow(ctx, query, username).Scan(&user.Id, &user.Username, &user.Roles)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, repository.ErrNotFound
+	err := r.db.QueryRow(ctx, query, username).Scan(&user.Id, &user.Username, &user.Roles)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return nil, repository.ErrNotFound
+		default:
+			return nil, err
+		}
 	}
 	return &user, err
 }

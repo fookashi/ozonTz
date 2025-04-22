@@ -1,8 +1,9 @@
-package inmemory
+package inmemory_test
 
 import (
 	"app/internal/entity"
 	"app/internal/repository"
+	"app/internal/repository/inmemory"
 	"context"
 	"testing"
 	"time"
@@ -12,13 +13,11 @@ import (
 )
 
 func TestInMemoryPostRepo(t *testing.T) {
-	// Setup
-	repo := NewPostRepo(10)
+	repo := inmemory.NewPostRepo(10)
 	ctx := context.Background()
 	canceledCtx, cancel := context.WithCancel(ctx)
 	cancel()
 
-	// Test data
 	now := time.Now()
 	post1 := entity.Post{
 		Id:            uuid.New(),

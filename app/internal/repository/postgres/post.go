@@ -10,15 +10,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type PostRepo struct {
-	pool *pgxpool.Pool
+	db Database
 }
 
-func NewPostRepo(pool *pgxpool.Pool) *PostRepo {
-	return &PostRepo{pool: pool}
+func NewPostRepo(db Database) *PostRepo {
+	return &PostRepo{db: db}
 }
 
 func (r *PostRepo) Create(ctx context.Context, post *entity.Post) error {
@@ -29,7 +28,7 @@ func (r *PostRepo) Create(ctx context.Context, post *entity.Post) error {
 		INSERT INTO posts (id, user_id, title, content, is_commentable, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := r.pool.Exec(ctx, query,
+	_, err := r.db.Exec(ctx, query,
 		post.Id, post.UserId, post.Title, post.Content, post.IsCommentable, post.CreatedAt)
 	return err
 }
@@ -43,7 +42,7 @@ func (r *PostRepo) Update(ctx context.Context, post *entity.Post) error {
 		SET title = $2, content = $3, is_commentable = $4
 		WHERE id = $1
 	`
-	result, err := r.pool.Exec(ctx, query,
+	result, err := r.db.Exec(ctx, query,
 		post.Id, post.Title, post.Content, post.IsCommentable)
 	if err != nil {
 		return err
@@ -66,7 +65,7 @@ func (r *PostRepo) GetOneById(ctx context.Context, id uuid.UUID) (*entity.Post, 
 		FROM posts
 		WHERE id = $1
 	`
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.db.QueryRow(ctx, query, id).Scan(
 		&post.Id, &post.UserId, &post.Title, &post.Content, &post.IsCommentable, &post.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, repository.ErrNotFound
@@ -93,7 +92,7 @@ func (r *PostRepo) GetMany(ctx context.Context, limit, offset int, sortBy reposi
 
 	builder.WriteString(" LIMIT $1 OFFSET $2")
 
-	rows, err := r.pool.Query(ctx, builder.String(), limit, offset)
+	rows, err := r.db.Query(ctx, builder.String(), limit, offset)
 	if err != nil {
 		return nil, err
 	}

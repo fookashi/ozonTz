@@ -1,9 +1,10 @@
-package service
+package service_test
 
 import (
 	"app/internal/entity"
 	"app/internal/repository"
 	mock_repository "app/internal/repository/mocks"
+	"app/internal/service"
 	"context"
 	"testing"
 	"time"
@@ -17,8 +18,7 @@ func TestCommentService_CreateComment(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	// Для каждого теста создаем новые моки, чтобы избежать пересечения вызовов
-	setup := func() (*CommentService, *mock_repository.MockPostRepo, *mock_repository.MockUserRepo, *mock_repository.MockCommentRepo) {
+	setup := func() (*service.CommentService, *mock_repository.MockPostRepo, *mock_repository.MockUserRepo, *mock_repository.MockCommentRepo) {
 		mockPostRepo := mock_repository.NewMockPostRepo(ctrl)
 		mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 		mockCommentRepo := mock_repository.NewMockCommentRepo(ctrl)
@@ -29,7 +29,7 @@ func TestCommentService_CreateComment(t *testing.T) {
 			CommentRepo: mockCommentRepo,
 		}
 
-		return &CommentService{RepoHolder: repoHolder}, mockPostRepo, mockUserRepo, mockCommentRepo
+		return &service.CommentService{RepoHolder: repoHolder}, mockPostRepo, mockUserRepo, mockCommentRepo
 	}
 
 	userID := uuid.New()
@@ -98,16 +98,16 @@ func TestCommentService_CreateComment(t *testing.T) {
 	})
 
 	t.Run("too many symbols", func(t *testing.T) {
-		service, _, _, _ := setup()
+		cService, _, _, _ := setup()
 
-		longContent := make([]rune, maxSymbolsLength+1)
+		longContent := make([]rune, 3000) // magic value
 		for i := range longContent {
 			longContent[i] = 'a'
 		}
 
-		result, err := service.CreateComment(context.Background(), userID, postID, nil, string(longContent))
+		result, err := cService.CreateComment(context.Background(), userID, postID, nil, string(longContent))
 
-		assert.ErrorIs(t, err, ErrTooManySymbols)
+		assert.ErrorIs(t, err, service.ErrTooManySymbols)
 		assert.Nil(t, result)
 	})
 
@@ -117,7 +117,7 @@ func TestCommentService_GetByPost(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	setup := func() (*CommentService, *mock_repository.MockCommentRepo, *mock_repository.MockUserRepo) {
+	setup := func() (*service.CommentService, *mock_repository.MockCommentRepo, *mock_repository.MockUserRepo) {
 		mockCommentRepo := mock_repository.NewMockCommentRepo(ctrl)
 		mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 
@@ -126,7 +126,7 @@ func TestCommentService_GetByPost(t *testing.T) {
 			UserRepo:    mockUserRepo,
 		}
 
-		return &CommentService{RepoHolder: repoHolder}, mockCommentRepo, mockUserRepo
+		return &service.CommentService{RepoHolder: repoHolder}, mockCommentRepo, mockUserRepo
 	}
 
 	postID := uuid.New()
@@ -151,7 +151,6 @@ func TestCommentService_GetByPost(t *testing.T) {
 			GetByPost(gomock.Any(), postID, limit, offset).
 			Return(commentEntities, nil)
 
-		// Исправляем ожидаемый возвращаемый тип для GetManyByIds
 		mockUserRepo.EXPECT().
 			GetManyByIds(gomock.Any(), []uuid.UUID{userID}).
 			Return(map[uuid.UUID]entity.User{
@@ -173,7 +172,7 @@ func TestCommentService_GetCommentReplies(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	setup := func() (*CommentService, *mock_repository.MockCommentRepo, *mock_repository.MockUserRepo) {
+	setup := func() (*service.CommentService, *mock_repository.MockCommentRepo, *mock_repository.MockUserRepo) {
 		mockCommentRepo := mock_repository.NewMockCommentRepo(ctrl)
 		mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 
@@ -182,7 +181,7 @@ func TestCommentService_GetCommentReplies(t *testing.T) {
 			UserRepo:    mockUserRepo,
 		}
 
-		return &CommentService{RepoHolder: repoHolder}, mockCommentRepo, mockUserRepo
+		return &service.CommentService{RepoHolder: repoHolder}, mockCommentRepo, mockUserRepo
 	}
 
 	parentID := uuid.New()
@@ -207,7 +206,6 @@ func TestCommentService_GetCommentReplies(t *testing.T) {
 			GetCommentReplies(gomock.Any(), parentID, limit, offset).
 			Return(replyEntities, nil)
 
-		// Исправляем ожидаемый возвращаемый тип
 		mockUserRepo.EXPECT().
 			GetManyByIds(gomock.Any(), []uuid.UUID{userID}).
 			Return(map[uuid.UUID]entity.User{

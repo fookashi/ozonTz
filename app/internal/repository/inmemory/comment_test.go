@@ -1,8 +1,9 @@
-package inmemory
+package inmemory_test
 
 import (
 	"app/internal/entity"
 	"app/internal/repository"
+	"app/internal/repository/inmemory"
 	"context"
 	"fmt"
 	"testing"
@@ -37,18 +38,18 @@ func TestCommentRepo(t *testing.T) {
 
 	tests := []struct {
 		name string
-		run  func(t *testing.T, repo *CommentRepo)
+		run  func(t *testing.T, repo *inmemory.CommentRepo)
 	}{
 		{
 			name: "Create/success",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				err := repo.Create(context.Background(), &baseComment)
 				assert.NoError(t, err)
 			},
 		},
 		{
 			name: "Create/canceled context",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				ctx, cancel := context.WithCancel(context.Background())
 				cancel()
 				err := repo.Create(ctx, &baseComment)
@@ -57,7 +58,7 @@ func TestCommentRepo(t *testing.T) {
 		},
 		{
 			name: "GetOneByID/success",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				_ = repo.Create(context.Background(), &baseComment)
 				result, err := repo.GetOneById(context.Background(), baseComment.Id)
 				assert.NoError(t, err)
@@ -66,14 +67,14 @@ func TestCommentRepo(t *testing.T) {
 		},
 		{
 			name: "GetOneByID/not found",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				_, err := repo.GetOneById(context.Background(), nonExistentID)
 				assert.ErrorIs(t, err, repository.ErrNotFound)
 			},
 		},
 		{
 			name: "GetOneByID/canceled context",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				_ = repo.Create(context.Background(), &baseComment)
 				ctx, cancel := context.WithCancel(context.Background())
 				cancel()
@@ -83,7 +84,7 @@ func TestCommentRepo(t *testing.T) {
 		},
 		{
 			name: "GetCommentReplies/success",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				parentComment := baseComment
 				parentComment.Id = parentCommentID
 				_ = repo.Create(context.Background(), &parentComment)
@@ -98,14 +99,14 @@ func TestCommentRepo(t *testing.T) {
 		},
 		{
 			name: "GetCommentReplies/parent not found",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				_, err := repo.GetCommentReplies(context.Background(), nonExistentID, 10, 0)
 				assert.ErrorIs(t, err, repository.ErrNotFound)
 			},
 		},
 		{
 			name: "GetCommentReplies/no replies",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				parentComment := baseComment
 				parentComment.Id = parentCommentID
 				_ = repo.Create(context.Background(), &parentComment)
@@ -117,7 +118,7 @@ func TestCommentRepo(t *testing.T) {
 		},
 		{
 			name: "GetCommentReplies/pagination",
-			run: func(t *testing.T, repo *CommentRepo) {
+			run: func(t *testing.T, repo *inmemory.CommentRepo) {
 				parentComment := baseComment
 				parentComment.Id = parentCommentID
 				_ = repo.Create(context.Background(), &parentComment)
@@ -137,13 +138,13 @@ func TestCommentRepo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := NewCommentRepo(10)
+			repo := inmemory.NewCommentRepo(10)
 			tt.run(t, repo)
 		})
 	}
 
 	t.Run("Concurrency", func(t *testing.T) {
-		repo := NewCommentRepo(100)
+		repo := inmemory.NewCommentRepo(100)
 		const numWorkers = 10
 		done := make(chan struct{})
 
@@ -173,7 +174,7 @@ func TestCommentRepo(t *testing.T) {
 			}()
 		}
 
-		for i := 0; i < numWorkers; i++ {
+		for range numWorkers {
 			<-done
 		}
 		close(done)

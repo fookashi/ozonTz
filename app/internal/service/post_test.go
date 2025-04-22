@@ -1,9 +1,10 @@
-package service
+package service_test
 
 import (
 	"app/internal/entity"
 	"app/internal/repository"
 	mock_repository "app/internal/repository/mocks"
+	"app/internal/service"
 	"context"
 	"errors"
 	"testing"
@@ -22,7 +23,7 @@ func TestPostService_GetPostById(t *testing.T) {
 	mockPostRepo := mock_repository.NewMockPostRepo(ctrl)
 	mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 	repoHolder := &repository.RepoHolder{PostRepo: mockPostRepo, UserRepo: mockUserRepo}
-	service := &PostService{RepoHolder: repoHolder}
+	postService := &service.PostService{RepoHolder: repoHolder}
 
 	ctx := context.Background()
 	postId := uuid.New()
@@ -45,7 +46,7 @@ func TestPostService_GetPostById(t *testing.T) {
 		mockPostRepo.EXPECT().GetOneById(ctx, postId).Return(post, nil)
 		mockUserRepo.EXPECT().GetOneById(ctx, userId).Return(user, nil)
 
-		result, err := service.GetPostById(ctx, postId)
+		result, err := postService.GetPostById(ctx, postId)
 		require.NoError(t, err)
 		assert.Equal(t, post.Id.String(), result.ID)
 		assert.Equal(t, post.Title, result.Title)
@@ -55,8 +56,8 @@ func TestPostService_GetPostById(t *testing.T) {
 	t.Run("post not found", func(t *testing.T) {
 		mockPostRepo.EXPECT().GetOneById(ctx, postId).Return(nil, repository.ErrNotFound)
 
-		_, err := service.GetPostById(ctx, postId)
-		assert.ErrorIs(t, err, ErrPostNotFound)
+		_, err := postService.GetPostById(ctx, postId)
+		assert.ErrorIs(t, err, service.ErrPostNotFound)
 	})
 
 	t.Run("user not found", func(t *testing.T) {
@@ -67,8 +68,8 @@ func TestPostService_GetPostById(t *testing.T) {
 		mockPostRepo.EXPECT().GetOneById(ctx, postId).Return(post, nil)
 		mockUserRepo.EXPECT().GetOneById(ctx, userId).Return(nil, repository.ErrNotFound)
 
-		_, err := service.GetPostById(ctx, postId)
-		assert.ErrorIs(t, err, ErrUserNotFound)
+		_, err := postService.GetPostById(ctx, postId)
+		assert.ErrorIs(t, err, service.ErrUserNotFound)
 	})
 }
 
@@ -79,7 +80,7 @@ func TestPostService_GetPosts(t *testing.T) {
 	mockPostRepo := mock_repository.NewMockPostRepo(ctrl)
 	mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 	repoHolder := &repository.RepoHolder{PostRepo: mockPostRepo, UserRepo: mockUserRepo}
-	service := &PostService{RepoHolder: repoHolder}
+	postService := &service.PostService{RepoHolder: repoHolder}
 
 	ctx := context.Background()
 	limit := 10
@@ -116,7 +117,7 @@ func TestPostService_GetPosts(t *testing.T) {
 		mockPostRepo.EXPECT().GetMany(ctx, limit, offset, repository.SortByNewest).Return(posts, nil)
 		mockUserRepo.EXPECT().GetManyByIds(ctx, []uuid.UUID{userId1, userId2}).Return(users, nil)
 
-		result, err := service.GetPosts(ctx, limit, offset, nil)
+		result, err := postService.GetPosts(ctx, limit, offset, nil)
 		require.NoError(t, err)
 		require.Len(t, result, 2)
 		assert.Equal(t, postId1.String(), result[0].ID)
@@ -134,7 +135,7 @@ func TestPostService_GetPosts(t *testing.T) {
 			GetManyByIds(ctx, []uuid.UUID{}).
 			Return(map[uuid.UUID]entity.User{}, nil)
 
-		result, err := service.GetPosts(ctx, limit, offset, nil)
+		result, err := postService.GetPosts(ctx, limit, offset, nil)
 		require.NoError(t, err)
 		assert.Empty(t, result)
 	})
@@ -142,7 +143,7 @@ func TestPostService_GetPosts(t *testing.T) {
 		expectedErr := errors.New("post repo error")
 		mockPostRepo.EXPECT().GetMany(ctx, limit, offset, repository.SortByNewest).Return(nil, expectedErr)
 
-		_, err := service.GetPosts(ctx, limit, offset, nil)
+		_, err := postService.GetPosts(ctx, limit, offset, nil)
 		assert.ErrorIs(t, err, expectedErr)
 	})
 
@@ -151,7 +152,7 @@ func TestPostService_GetPosts(t *testing.T) {
 		mockPostRepo.EXPECT().GetMany(ctx, limit, offset, repository.SortByNewest).Return(posts, nil)
 		mockUserRepo.EXPECT().GetManyByIds(ctx, []uuid.UUID{userId1}).Return(nil, errors.New("user repo error"))
 
-		_, err := service.GetPosts(ctx, limit, offset, nil)
+		_, err := postService.GetPosts(ctx, limit, offset, nil)
 		assert.Error(t, err)
 	})
 
@@ -160,8 +161,8 @@ func TestPostService_GetPosts(t *testing.T) {
 		mockPostRepo.EXPECT().GetMany(ctx, limit, offset, repository.SortByNewest).Return(posts, nil)
 		mockUserRepo.EXPECT().GetManyByIds(ctx, []uuid.UUID{userId1}).Return(map[uuid.UUID]entity.User{}, nil)
 
-		_, err := service.GetPosts(ctx, limit, offset, nil)
-		assert.ErrorIs(t, err, ErrUserNotFound)
+		_, err := postService.GetPosts(ctx, limit, offset, nil)
+		assert.ErrorIs(t, err, service.ErrUserNotFound)
 	})
 }
 
@@ -172,7 +173,7 @@ func TestPostService_CreatePost(t *testing.T) {
 	mockPostRepo := mock_repository.NewMockPostRepo(ctrl)
 	mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 	repoHolder := &repository.RepoHolder{PostRepo: mockPostRepo, UserRepo: mockUserRepo}
-	service := &PostService{RepoHolder: repoHolder}
+	postService := &service.PostService{RepoHolder: repoHolder}
 
 	ctx := context.Background()
 	userId := uuid.New()
@@ -192,7 +193,7 @@ func TestPostService_CreatePost(t *testing.T) {
 				return nil
 			})
 
-		result, err := service.CreatePost(ctx, userId, title, content, isCommentable)
+		result, err := postService.CreatePost(ctx, userId, title, content, isCommentable)
 		require.NoError(t, err)
 		assert.Equal(t, title, result.Title)
 		assert.Equal(t, user.Username, result.User.Username)
@@ -201,15 +202,15 @@ func TestPostService_CreatePost(t *testing.T) {
 	t.Run("user not found", func(t *testing.T) {
 		mockUserRepo.EXPECT().GetOneById(ctx, userId).Return(nil, repository.ErrNotFound)
 
-		_, err := service.CreatePost(ctx, userId, title, content, isCommentable)
-		assert.ErrorIs(t, err, ErrUserNotFound)
+		_, err := postService.CreatePost(ctx, userId, title, content, isCommentable)
+		assert.ErrorIs(t, err, service.ErrUserNotFound)
 	})
 
 	t.Run("invalid post data", func(t *testing.T) {
-		_, err := service.CreatePost(ctx, userId, "", content, isCommentable)
+		_, err := postService.CreatePost(ctx, userId, "", content, isCommentable)
 		assert.ErrorIs(t, err, entity.ErrEmptyTitle)
 
-		_, err = service.CreatePost(ctx, userId, title, "", isCommentable)
+		_, err = postService.CreatePost(ctx, userId, title, "", isCommentable)
 		assert.ErrorIs(t, err, entity.ErrEmptyContent)
 	})
 
@@ -219,7 +220,7 @@ func TestPostService_CreatePost(t *testing.T) {
 		mockUserRepo.EXPECT().GetOneById(ctx, userId).Return(user, nil)
 		mockPostRepo.EXPECT().Create(ctx, gomock.Any()).Return(expectedErr)
 
-		_, err := service.CreatePost(ctx, userId, title, content, isCommentable)
+		_, err := postService.CreatePost(ctx, userId, title, content, isCommentable)
 		assert.ErrorIs(t, err, expectedErr)
 	})
 }
@@ -230,7 +231,7 @@ func TestPostService_TogglePostComments(t *testing.T) {
 
 	mockPostRepo := mock_repository.NewMockPostRepo(ctrl)
 	repoHolder := &repository.RepoHolder{PostRepo: mockPostRepo}
-	service := &PostService{RepoHolder: repoHolder}
+	postService := &service.PostService{RepoHolder: repoHolder}
 
 	ctx := context.Background()
 	postId := uuid.New()
@@ -250,7 +251,7 @@ func TestPostService_TogglePostComments(t *testing.T) {
 				return nil
 			})
 
-		err := service.TogglePostComments(ctx, postId, ownerId, true)
+		err := postService.TogglePostComments(ctx, postId, ownerId, true)
 		assert.NoError(t, err)
 	})
 
@@ -267,15 +268,15 @@ func TestPostService_TogglePostComments(t *testing.T) {
 				return nil
 			})
 
-		err := service.TogglePostComments(ctx, postId, ownerId, false)
+		err := postService.TogglePostComments(ctx, postId, ownerId, false)
 		assert.NoError(t, err)
 	})
 
 	t.Run("post not found", func(t *testing.T) {
 		mockPostRepo.EXPECT().GetOneById(ctx, postId).Return(nil, repository.ErrNotFound)
 
-		err := service.TogglePostComments(ctx, postId, ownerId, true)
-		assert.ErrorIs(t, err, ErrPostNotFound)
+		err := postService.TogglePostComments(ctx, postId, ownerId, true)
+		assert.ErrorIs(t, err, service.ErrPostNotFound)
 	})
 
 	t.Run("no permission", func(t *testing.T) {
@@ -285,8 +286,8 @@ func TestPostService_TogglePostComments(t *testing.T) {
 		}
 		mockPostRepo.EXPECT().GetOneById(ctx, postId).Return(post, nil)
 
-		err := service.TogglePostComments(ctx, postId, otherUserId, true)
-		assert.ErrorIs(t, err, ErrNoPermissionForToggle)
+		err := postService.TogglePostComments(ctx, postId, otherUserId, true)
+		assert.ErrorIs(t, err, service.ErrNoPermissionForToggle)
 	})
 
 	t.Run("update error", func(t *testing.T) {
@@ -298,7 +299,7 @@ func TestPostService_TogglePostComments(t *testing.T) {
 		mockPostRepo.EXPECT().GetOneById(ctx, postId).Return(post, nil)
 		mockPostRepo.EXPECT().Update(ctx, gomock.Any()).Return(expectedErr)
 
-		err := service.TogglePostComments(ctx, postId, ownerId, true)
+		err := postService.TogglePostComments(ctx, postId, ownerId, true)
 		assert.ErrorIs(t, err, expectedErr)
 	})
 }

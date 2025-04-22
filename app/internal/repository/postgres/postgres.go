@@ -1,4 +1,3 @@
-// 4. repo_holder.go
 package postgres
 
 import (

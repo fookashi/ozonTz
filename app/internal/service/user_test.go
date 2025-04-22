@@ -1,9 +1,10 @@
-package service
+package service_test
 
 import (
 	"app/internal/entity"
 	"app/internal/repository"
 	mock_repository "app/internal/repository/mocks"
+	"app/internal/service"
 	"context"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestUserService_GetUser(t *testing.T) {
 
 	mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 	repoHolder := &repository.RepoHolder{UserRepo: mockUserRepo}
-	service := &UserService{RepoHolder: repoHolder}
+	userService := &service.UserService{RepoHolder: repoHolder}
 
 	t.Run("success", func(t *testing.T) {
 		userID := uuid.New()
@@ -31,7 +32,7 @@ func TestUserService_GetUser(t *testing.T) {
 			GetOneById(gomock.Any(), userID).
 			Return(&expectedUser, nil)
 
-		result, err := service.GetUser(context.Background(), userID)
+		result, err := userService.GetUser(context.Background(), userID)
 
 		assert.NoError(t, err)
 		assert.Equal(t, userID.String(), result.ID)
@@ -45,9 +46,9 @@ func TestUserService_GetUser(t *testing.T) {
 			GetOneById(gomock.Any(), userID).
 			Return(nil, repository.ErrNotFound)
 
-		result, err := service.GetUser(context.Background(), userID)
+		result, err := userService.GetUser(context.Background(), userID)
 
-		assert.ErrorIs(t, err, ErrUserNotFound)
+		assert.ErrorIs(t, err, service.ErrUserNotFound)
 		assert.Nil(t, result)
 	})
 }
@@ -58,7 +59,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	mockUserRepo := mock_repository.NewMockUserRepo(ctrl)
 	repoHolder := &repository.RepoHolder{UserRepo: mockUserRepo}
-	service := &UserService{RepoHolder: repoHolder}
+	userService := &service.UserService{RepoHolder: repoHolder}
 
 	t.Run("success", func(t *testing.T) {
 		username := "newuser"
@@ -74,7 +75,7 @@ func TestUserService_CreateUser(t *testing.T) {
 			}).
 			Return(nil)
 
-		result, err := service.CreateUser(context.Background(), username)
+		result, err := userService.CreateUser(context.Background(), username)
 
 		assert.NoError(t, err)
 		assert.NotEmpty(t, result.ID)
@@ -92,9 +93,9 @@ func TestUserService_CreateUser(t *testing.T) {
 			GetOneByUsername(gomock.Any(), username).
 			Return(existingUser, nil)
 
-		result, err := service.CreateUser(context.Background(), username)
+		result, err := userService.CreateUser(context.Background(), username)
 
-		assert.ErrorIs(t, err, ErrUsernameExists)
+		assert.ErrorIs(t, err, service.ErrUsernameExists)
 		assert.Nil(t, result)
 	})
 }

@@ -9,15 +9,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type CommentRepo struct {
-	pool *pgxpool.Pool
+	db Database
 }
 
-func NewCommentRepo(pool *pgxpool.Pool) *CommentRepo {
-	return &CommentRepo{pool: pool}
+func NewCommentRepo(db Database) *CommentRepo {
+	return &CommentRepo{db: db}
 }
 
 func (r *CommentRepo) GetOneById(ctx context.Context, commentId uuid.UUID) (*entity.Comment, error) {
@@ -31,7 +30,7 @@ func (r *CommentRepo) GetOneById(ctx context.Context, commentId uuid.UUID) (*ent
         WHERE id = $1
     `
 
-	err := r.pool.QueryRow(ctx, query, commentId).Scan(
+	err := r.db.QueryRow(ctx, query, commentId).Scan(
 		&comment.Id,
 		&comment.UserId,
 		&comment.PostId,
@@ -55,7 +54,7 @@ func (r *CommentRepo) Create(ctx context.Context, comment *entity.Comment) error
 		INSERT INTO comments (id, user_id, post_id, parent_id, content, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := r.pool.Exec(ctx, query, comment.Id, comment.UserId, comment.PostId, comment.ParentId, comment.Content, comment.CreatedAt)
+	_, err := r.db.Exec(ctx, query, comment.Id, comment.UserId, comment.PostId, comment.ParentId, comment.Content, comment.CreatedAt)
 	return err
 }
 
@@ -68,7 +67,7 @@ func (r *CommentRepo) GetByPost(ctx context.Context, postId uuid.UUID, limit, of
         LIMIT $2 OFFSET $3
     `
 
-	rows, err := r.pool.Query(ctx, query, postId, limit, offset)
+	rows, err := r.db.Query(ctx, query, postId, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +95,7 @@ func (r *CommentRepo) GetCommentReplies(ctx context.Context, parentId uuid.UUID,
         LIMIT $2 OFFSET $3
     `
 
-	rows, err := r.pool.Query(ctx, query, parentId, limit, offset)
+	rows, err := r.db.Query(ctx, query, parentId, limit, offset)
 	if err != nil {
 		return nil, err
 	}
